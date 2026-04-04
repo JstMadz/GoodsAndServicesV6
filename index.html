@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Goods & Services Scheduler — TUP (v6.0)</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <!-- html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  </head>
+  <body>
+    <div class="card" id="mainCard">
+      <!-- Visible UI header (hidden when printing the single project pages) -->
+      <header class="ui-header no-print">
+        <img
+          id="tupLogo"
+          src="tup_logo.png"
+          alt="TUP Logo"
+          onerror="this.style.display='none'"
+        />
+        <div>
+          <h1>Technological University of the Philippines</h1>
+          <h2 class="muted">Goods & Services Procurement Scheduler (v6.0)</h2>
+        </div>
+      </header>
+
+      <!-- Controls row (top) -->
+      <div class="controls-row no-print" id="controlsTop">
+        <div class="control-group">
+          <label for="preprocDate">Pre-Procurement Conference (start)</label>
+          <input id="preprocDate" type="date" />
+        </div>
+
+        <div class="control-group actions-right">
+          <label>&nbsp;</label>
+          <div class="button-row">
+            <button id="generateBtn">Generate Schedule</button>
+            <button id="exportCsvBtn" class="ghost small">Export CSV</button>
+            <button id="exportJsonBtn" class="ghost small">Export JSON</button>
+            <button id="downloadPdfBtn" class="ghost small">
+              Download PDF (All)
+            </button>
+            <button id="printBtn" class="ghost small">
+              Print (Select Project)
+            </button>
+            <button id="resetBtn" class="ghost">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Holidays row -->
+      <div class="controls-row holiday-row no-print">
+        <div class="holiday-full">
+          <label>Add Holiday (single date)</label>
+          <div class="holiday-controls">
+            <input id="holidayPicker" type="date" />
+            <button id="addHolidayBtn" class="ghost small">Add Holiday</button>
+            <button id="clearHolidaysBtn" class="ghost small">
+              Clear Holidays
+            </button>
+            <input
+              id="loadHolidaysFile"
+              type="file"
+              accept="application/json"
+              style="display: none"
+            />
+            <button id="loadHolidaysBtn" class="ghost small">Load .json</button>
+            <button id="saveHolidaysBtn" class="small">Save .json</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project inputs row -->
+      <div class="controls-row no-print" id="controlsBottom">
+        <div class="control-group wide">
+          <label for="projectTitle">Project Title</label>
+          <input
+            id="projectTitle"
+            type="text"
+            placeholder="e.g., Procurement of IT Equipment for Computer Labs"
+          />
+        </div>
+
+        <div class="control-group narrow">
+          <label for="abcInput">Approved Budget for the Contract (ABC)</label>
+          <input
+            id="abcInput"
+            type="text"
+            placeholder="₱0.00"
+            inputmode="numeric"
+          />
+        </div>
+
+        <div class="control-group time-group">
+          <label>Start Time</label>
+          <input id="startTime" type="time" />
+        </div>
+
+        <div class="control-group time-group">
+          <label>End Time</label>
+          <input id="endTime" type="time" />
+        </div>
+
+        <div
+          class="control-group actions-right narrow"
+          style="align-self: flex-end"
+        >
+          <label>&nbsp;</label>
+          <div class="button-row">
+            <button id="addProjectBtn" class="small">Add Project</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input previews -->
+      <div class="info-row">
+        <div><strong>Project:</strong> <span id="titlePreview">—</span></div>
+        <div><strong>ABC:</strong> <span id="abcPreview">—</span></div>
+        <div><strong>Time:</strong> <span id="timePreview">—</span></div>
+      </div>
+
+      <!-- Projects list -->
+      <div class="projects-area">
+        <div class="small">Added projects:</div>
+        <div id="projectsList" class="projects-list"></div>
+      </div>
+
+      <!-- Schedules will be rendered here -->
+      <div id="schedulesContainer"></div>
+
+      <p class="notes">
+        Rules: Advertisement = Pre-Procurement + 3 calendar days (advance if
+        weekend/holiday). Pre-Bid = Advertisement + 7 calendar days (advance).
+        Deadline = Pre-Bid + 12 calendar days (advance). Clarification = 9
+        calendar days before Deadline (retreat to previous working day if
+        weekend/holiday). Supplemental Posting = 7 calendar days before Deadline
+        (retreat to previous working day).
+      </p>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
