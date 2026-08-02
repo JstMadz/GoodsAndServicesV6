@@ -107,27 +107,25 @@ The scheduling engine automatically skips all weekends and registered holidays.
 
 ---
 
-## Adjustable Activity Durations
+## Schedule Integrity
 
-Each procurement activity includes an adjustment field allowing users to:
-
-* Extend activity durations
-* Shorten durations when permitted
-* Automatically recompute all succeeding procurement dates
+The schedule uses the defined procurement-rule intervals consistently. Any change to the anchor date, project list, or non-working dates requires regeneration before output can be exported, preventing users from distributing stale dates.
 
 ---
 
-## Interactive Gantt Chart
+## Accessible, Responsive Interface
 
-The generated schedule is visualized using a Gantt Chart.
+The interface is designed for keyboard, touch, desktop, and large interactive-board use.
 
-Features:
+* Fluid layout from phone screens through large displays
+* Large touch targets and visible keyboard focus states
+* Screen-reader labels, live status updates, and semantic tables
+* Mobile schedules switch to labelled stacked rows instead of requiring horizontal scrolling
+* Print-friendly output with one project per page
 
-* Timeline visualization
-* Actual activity durations
-* Automatic resizing
-* Printable
-* Included in exported PDF
+## Input Validation and Recovery
+
+The system validates required fields before a project or schedule is created. It catches missing or duplicate project titles, invalid budget formats, non-positive budgets, invalid time ranges, missing anchor dates, weekends/non-working anchor dates, duplicate holidays, malformed holiday imports, and oversized import files. Changes that affect dates mark existing output as needing regeneration so stale schedules cannot be exported.
 
 ---
 
@@ -165,7 +163,6 @@ These are automatically included in:
 * HTML5
 * CSS3
 * JavaScript (ES6)
-* Chart.js
 * html2pdf.js
 * Local Storage API
 
