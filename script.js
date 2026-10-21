@@ -22,7 +22,6 @@ const $ = (id) => document.getElementById(id);
 const els = Object.fromEntries(
   [
     "preprocDate",
-    "holidayPicker",
     "holidayList",
     "projectForm",
     "projectTitle",
@@ -40,11 +39,18 @@ const els = Object.fromEntries(
     "printBtn",
     "loadHolidaysFile",
     "appStatus",
+    "addProjectBtn",
+    "cancelEditBtn",
+    "paperSize",
+    "holidayCalendarMonth",
+    "holidayCalendarDays",
   ].map((id) => [id, $(id)]),
 );
 let holidays = [],
   projects = [],
-  lastSchedules = [];
+  lastSchedules = [],
+  editingProjectId = null,
+  calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1, 12);
 
 function localDate(iso) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -167,9 +173,30 @@ function renderHolidays() {
       holidays = holidays.filter((d) => d !== b.dataset.date);
       storage("tup_gs_holidays", holidays);
       renderHolidays();
+      invalidateResults();
       notify("Non-working date removed.");
     }),
   );
+  renderHolidayCalendar();
+}
+function renderHolidayCalendar() {
+  els.holidayCalendarMonth.textContent = new Intl.DateTimeFormat("en-PH", {
+    month: "long",
+    year: "numeric",
+  }).format(calendarMonth);
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const firstWeekday = new Date(year, month, 1, 12).getDay();
+  const daysInMonth = new Date(year, month + 1, 0, 12).getDate();
+  const cells = Array.from({ length: firstWeekday }, () => '<span class="calendar-empty" aria-hidden="true"></span>');
+  for (let day = 1; day <= daysInMonth; day++) {
+    const value = isoDate(new Date(year, month, day, 12));
+    const isListed = holidays.includes(value);
+    const classes = ["calendar-day", isListed ? "is-listed" : ""].filter(Boolean).join(" ");
+    const label = `${readable(localDate(value))}${isListed ? ", already added as a non-working date" : ", add as a non-working date"}`;
+    cells.push(`<button class="${classes}" type="button" data-date="${value}" ${isListed ? "disabled" : ""} aria-label="${label}">${day}</button>`);
+  }
+  els.holidayCalendarDays.innerHTML = cells.join("");
 }
 function renderProjects() {
   els.projectCount.textContent = projects.length;
@@ -177,18 +204,22 @@ function renderProjects() {
     ? projects
         .map(
           (p) =>
-            `<article class="project-card"><div><h3>${escapeHtml(p.title)}</h3><p><strong>${money(p.abc)}</strong> · ${time12(p.startTime)}–${time12(p.endTime)}</p></div><button class="icon-button" type="button" data-id="${p.id}" aria-label="Remove ${escapeHtml(p.title)}">Remove</button></article>`,
+            `<article class="project-card"><div><h3>${escapeHtml(p.title)}</h3><p><strong>${money(p.abc)}</strong> · ${time12(p.startTime)}–${time12(p.endTime)}</p></div><div class="project-actions"><button class="icon-button edit-project" type="button" data-id="${p.id}" aria-label="Edit ${escapeHtml(p.title)}">Edit</button><button class="icon-button remove-project" type="button" data-id="${p.id}" aria-label="Remove ${escapeHtml(p.title)}">Remove</button></div></article>`,
         )
         .join("")
     : '<div class="empty-state"><h3>No projects added</h3><p>Add a project to begin building schedules.</p></div>';
-  els.projectsList.querySelectorAll("button[data-id]").forEach((b) =>
+  els.projectsList.querySelectorAll(".remove-project").forEach((b) =>
     b.addEventListener("click", () => {
+      if (editingProjectId === b.dataset.id) resetProjectForm();
       projects = projects.filter((p) => p.id !== b.dataset.id);
       storage("tup_gs_projects", projects);
       renderProjects();
       invalidateResults();
       notify("Project removed.");
     }),
+  );
+  els.projectsList.querySelectorAll(".edit-project").forEach((b) =>
+    b.addEventListener("click", () => beginProjectEdit(b.dataset.id)),
   );
 }
 function setExportState(enabled) {
@@ -226,7 +257,7 @@ function validProject() {
     ok = false;
   } else if (
     projects.some(
-      (p) => p.title.trim().toLocaleLowerCase() === title.toLocaleLowerCase(),
+      (p) => p.id !== editingProjectId && p.title.trim().toLocaleLowerCase() === title.toLocaleLowerCase(),
     )
   ) {
     setError("titleError", "A project with this title already exists.");
@@ -258,6 +289,29 @@ function validProject() {
     ok = false;
   }
   return ok ? { title, abc, start, end } : null;
+}
+function resetProjectForm() {
+  editingProjectId = null;
+  els.projectForm.reset();
+  els.addProjectBtn.textContent = "Add project";
+  els.cancelEditBtn.hidden = true;
+  $("projectFormHeading").textContent = "Add a project";
+  clearFormErrors();
+}
+function beginProjectEdit(id) {
+  const project = projects.find((item) => item.id === id);
+  if (!project) return;
+  editingProjectId = id;
+  els.projectTitle.value = project.title;
+  els.abcInput.value = Number(project.abc).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  els.startTime.value = project.startTime;
+  els.endTime.value = project.endTime;
+  els.addProjectBtn.textContent = "Save changes";
+  els.cancelEditBtn.hidden = false;
+  $("projectFormHeading").textContent = "Edit project";
+  clearFormErrors();
+  els.projectTitle.focus();
+  $("projectFormHeading").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 function computeSchedule(anchorISO) {
   const preproc = localDate(anchorISO),
@@ -310,7 +364,7 @@ function renderSchedules() {
   els.schedulesContainer.innerHTML = lastSchedules
     .map(
       ({ project, rows, createdAt }) =>
-        `<article class="project-schedule"><header class="schedule-head"><div class="schedule-brand"><img src="tup_logo.png" alt="Technological University of the Philippines logo" onerror="this.hidden=true"><div><p class="university-name">Technological University of the Philippines</p><p class="document-name">Goods &amp; Services Procurement Schedule</p></div></div><h3>${escapeHtml(project.title)}</h3><div class="metadata"><span><strong>ABC:</strong> ${money(project.abc)}</span><span><strong>Schedule time:</strong> ${time12(project.startTime)}–${time12(project.endTime)}</span><span><strong>Anchor date:</strong> ${readable(localDate(els.preprocDate.value))}</span></div></header><div class="table-wrap"><table class="schedule-table"><thead><tr><th scope="col">Procurement activity</th><th scope="col">Scheduled date</th><th scope="col">Minimum days</th><th scope="col">Maximum days</th></tr></thead><tbody>${rows.map((r) => `<tr><td data-label="Activity">${r.activity}</td><td data-label="Scheduled date">${r.date}</td><td data-label="Minimum days">${r.minDays}</td><td data-label="Maximum days">${r.maxDays}</td></tr>`).join("")}</tbody></table></div><footer class="schedule-footer"><div class="signatory"><p>Prepared by:</p><div class="signature-line"></div><strong>Signature over printed name</strong><span>Procurement Office</span></div><div class="document-timestamps"><p><strong>Created:</strong> ${createdAt}</p><p><strong>Printed:</strong> <time class="output-printed-at">Not printed yet</time></p></div></footer></article>`,
+        `<article class="project-schedule"><header class="schedule-head"><div class="schedule-brand"><img src="tup_logo.png" alt="Technological University of the Philippines logo" onerror="this.hidden=true"><div><p class="university-name">Technological University of the Philippines</p><p class="document-name">Goods &amp; Services Procurement Schedule</p></div></div><h3>${escapeHtml(project.title)}</h3><div class="metadata"><span><strong>ABC:</strong> ${money(project.abc)}</span><span><strong>Schedule time:</strong> ${time12(project.startTime)}–${time12(project.endTime)}</span><span><strong>Anchor date:</strong> ${readable(localDate(els.preprocDate.value))}</span></div></header><div class="table-wrap"><table class="schedule-table"><thead><tr><th scope="col">Procurement activity</th><th scope="col">Scheduled date</th><th scope="col">Minimum days</th><th scope="col">Maximum days</th></tr></thead><tbody>${rows.map((r) => `<tr><td data-label="Activity">${r.activity}</td><td data-label="Scheduled date">${r.date}</td><td data-label="Minimum days">${r.minDays}</td><td data-label="Maximum days">${r.maxDays}</td></tr>`).join("")}<tr class="total-days-row"><th scope="row" colspan="2">Total counted days</th><td data-label="Total minimum days">${rows.reduce((sum, r) => sum + r.minDays, 0)}</td><td data-label="Total maximum days">${rows.reduce((sum, r) => sum + r.maxDays, 0)}</td></tr></tbody></table></div><footer class="schedule-footer"><div class="signatory"><p>Prepared by:</p><div class="signature-line"></div><strong>Signature over printed name</strong><span>Procurement Office</span></div><div class="document-timestamps"><p><strong>Created:</strong> ${createdAt}</p><p><strong>Printed:</strong> <time class="output-printed-at">Not printed yet</time></p></div></footer></article>`,
     )
     .join("");
   setExportState(true);
@@ -342,7 +396,7 @@ function exportCsv() {
       "Maximum Days",
     ],
   ];
-  lastSchedules.forEach(({ project, schedules, rows: scheduleRows }) =>
+  lastSchedules.forEach(({ project, rows: scheduleRows }) => {
     scheduleRows.forEach((r) =>
       rows.push([
         project.title,
@@ -354,8 +408,18 @@ function exportCsv() {
         r.minDays,
         r.maxDays,
       ]),
-    ),
-  );
+    );
+    rows.push([
+      project.title,
+      project.abc,
+      project.startTime,
+      project.endTime,
+      "Total counted days",
+      "",
+      scheduleRows.reduce((sum, item) => sum + item.minDays, 0),
+      scheduleRows.reduce((sum, item) => sum + item.maxDays, 0),
+    ]);
+  });
   download(
     "tup-procurement-schedules.csv",
     "text/csv;charset=utf-8",
@@ -389,10 +453,91 @@ function stampOutputTime() {
     .querySelectorAll(".output-printed-at")
     .forEach((item) => (item.textContent = printedAt));
 }
+// Paper sizes in mm; each schedule must fit inside one sheet minus margins.
+const PAPER = {
+  a4: { width: 210, height: 297, format: "a4" },
+  folio: { width: 215.9, height: 330.2, format: [215.9, 330.2] },
+};
+const PRINT_MARGIN_MM = 5;
+const PDF_MARGIN_MM = 4;
+const MM_TO_PX = 96 / 25.4;
+function selectedPaper() {
+  return PAPER[els.paperSize.value] || PAPER.a4;
+}
+// Fit each schedule to one printable page while using extra Folio height too.
+function fitScheduleToPage(schedule, paper, margin) {
+  const width = (paper.width - margin * 2) * MM_TO_PX;
+  const height = (paper.height - margin * 2 - 2) * MM_TO_PX;
+  const maxScale = 1.18;
+  schedule.style.zoom = "";
+  schedule.style.width = `${width}px`;
+
+  const naturalHeight = schedule.scrollHeight;
+  let low = naturalHeight > height ? 0.5 : 1;
+  let high = naturalHeight > height ? 1 : maxScale;
+  for (let i = 0; i < 12; i++) {
+    const scale = (low + high) / 2;
+    schedule.style.zoom = String(scale);
+    schedule.style.width = `${width / scale}px`;
+    const fittedHeight = schedule.scrollHeight * scale;
+    if (fittedHeight <= height) low = scale;
+    else high = scale;
+  }
+
+  if (Math.abs(low - 1) < 0.005) {
+    schedule.style.zoom = "";
+    schedule.style.width = `${width}px`;
+    return;
+  }
+  schedule.style.zoom = String(low);
+  schedule.style.width = `${width / low}px`;
+}
+function fitSchedulesToPage(paper, margin) {
+  els.schedulesContainer
+    .querySelectorAll(".project-schedule")
+    .forEach((schedule) => fitScheduleToPage(schedule, paper, margin));
+}
+function resetScheduleFit() {
+  els.schedulesContainer
+    .querySelectorAll(".project-schedule")
+    .forEach((schedule) => {
+      schedule.style.zoom = "";
+      schedule.style.width = "";
+    });
+}
 function printSchedules() {
   if (!lastSchedules.length) return;
+  const paper = selectedPaper();
   stampOutputTime();
+  els.schedulesContainer.classList.add("compact-output");
+  const pageStyle = document.createElement("style");
+  pageStyle.textContent = `@page { size: ${paper.width}mm ${paper.height}mm; margin: ${PRINT_MARGIN_MM}mm; }`;
+  document.head.appendChild(pageStyle);
+  fitSchedulesToPage(paper, PRINT_MARGIN_MM);
+  window.addEventListener(
+    "afterprint",
+    () => {
+      els.schedulesContainer.classList.remove("compact-output");
+      resetScheduleFit();
+      pageStyle.remove();
+    },
+    { once: true },
+  );
   window.print();
+}
+// Pads a canvas sideways so its aspect ratio fits one page; html2pdf then
+// never slices it across a second sheet.
+function fitCanvasToPage(canvas, ratio) {
+  const width = Math.max(canvas.width, Math.ceil(canvas.height / ratio) + 1);
+  if (width === canvas.width) return canvas;
+  const fitted = document.createElement("canvas");
+  fitted.width = width;
+  fitted.height = canvas.height;
+  const context = fitted.getContext("2d");
+  context.fillStyle = "#fff";
+  context.fillRect(0, 0, width, canvas.height);
+  context.drawImage(canvas, Math.floor((width - canvas.width) / 2), 0);
+  return fitted;
 }
 async function pdfSchedules() {
   if (!lastSchedules.length) return;
@@ -403,34 +548,75 @@ async function pdfSchedules() {
     );
     return;
   }
+  const paper = selectedPaper();
+  const options = {
+    margin: PDF_MARGIN_MM,
+    filename: "tup-procurement-schedules.pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "mm", format: paper.format, orientation: "portrait" },
+  };
+  const ratio =
+    (paper.height - PDF_MARGIN_MM * 2) / (paper.width - PDF_MARGIN_MM * 2);
   try {
     stampOutputTime();
-    await window
+    // Render each schedule to its own canvas so every project is one page.
+    const canvases = [];
+    for (const schedule of els.schedulesContainer.querySelectorAll(
+      ".project-schedule",
+    )) {
+      const page = document.createElement("div");
+      page.className = "schedule-container compact-output";
+      const scheduleCopy = schedule.cloneNode(true);
+      page.appendChild(scheduleCopy);
+      document.body.appendChild(page);
+      page.style.position = "absolute";
+      page.style.left = "-10000px";
+      fitScheduleToPage(scheduleCopy, paper, PDF_MARGIN_MM);
+      page.remove();
+      page.style.position = "";
+      page.style.left = "";
+      const canvas = await window
+        .html2pdf()
+        .set(options)
+        .from(page)
+        .toCanvas()
+        .get("canvas");
+      canvases.push(fitCanvasToPage(canvas, ratio));
+    }
+    let worker = window
       .html2pdf()
-      .set({
-        margin: 8,
-        filename: "tup-procurement-schedules.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"], avoid: ["tr"] },
-      })
-      .from(els.schedulesContainer)
-      .save();
+      .set(options)
+      .from(canvases[0], "canvas")
+      .toPdf();
+    canvases.slice(1).forEach((canvas) => {
+      worker = worker
+        .get("pdf")
+        .then((pdf) => pdf.addPage())
+        .from(canvas, "canvas")
+        .toPdf();
+    });
+    await worker.save();
   } catch {
     notify("PDF export could not be completed. Please try again.", true);
   }
 }
 
-$("addHolidayBtn").addEventListener("click", () => {
-  const value = els.holidayPicker.value;
-  if (!value) return notify("Choose a non-working date first.", true);
-  if (holidays.includes(value))
-    return notify("That non-working date is already listed.", true);
-  holidays.push(value);
-  holidays.sort();
+$("holidayPrevMonth").addEventListener("click", () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1, 12);
+  renderHolidayCalendar();
+});
+$("holidayNextMonth").addEventListener("click", () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1, 12);
+  renderHolidayCalendar();
+});
+els.holidayCalendarDays.addEventListener("click", (event) => {
+  const dayButton = event.target.closest("button[data-date]");
+  if (!dayButton || dayButton.disabled) return;
+  const date = dayButton.dataset.date;
+  if (holidays.includes(date)) return;
+  holidays = [...holidays, date].sort();
   storage("tup_gs_holidays", holidays);
-  els.holidayPicker.value = "";
   renderHolidays();
   invalidateResults();
   notify("Non-working date added.");
@@ -497,20 +683,25 @@ els.projectForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const p = validProject();
   if (!p) return;
-  projects.push({
-    id: crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+  const updatedProject = {
+    id: editingProjectId || crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`,
     title: p.title,
     abc: p.abc,
     startTime: p.start,
     endTime: p.end,
-  });
+  };
+  if (editingProjectId) {
+    projects = projects.map((project) => project.id === editingProjectId ? updatedProject : project);
+  } else projects.push(updatedProject);
+  const wasEditing = Boolean(editingProjectId);
   storage("tup_gs_projects", projects);
-  els.projectForm.reset();
+  resetProjectForm();
   renderProjects();
   invalidateResults();
-  notify("Project added.");
+  notify(wasEditing ? "Project changes saved." : "Project added.");
   els.projectTitle.focus();
 });
+els.cancelEditBtn.addEventListener("click", resetProjectForm);
 function formatBudgetInput(value, keepTrailingDecimal = false) {
   const raw = value.replace(/,/g, "").replace(/[^0-9.]/g, "");
   const [whole = "", ...decimalParts] = raw.split(".");
@@ -552,6 +743,7 @@ $("resetBtn").addEventListener("click", () => {
   )
     return;
   projects = [];
+  resetProjectForm();
   storage("tup_gs_projects", projects);
   els.preprocDate.value = "";
   els.projectForm.reset();

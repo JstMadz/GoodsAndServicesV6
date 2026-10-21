@@ -120,7 +120,15 @@ h1 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .settings-grid {
-  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.settings-grid > .field,
+.settings-grid > .holiday-fieldset {
+  min-width: 0;
+  padding: 0.9rem;
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
 .title-field {
   grid-column: span 2;
@@ -204,6 +212,17 @@ button:focus-visible {
   padding: 0;
   border: 0;
 }
+.holiday-picker {
+  max-width: none;
+}
+.saved-holidays-fieldset .tag-list {
+  max-height: 15rem;
+  align-content: start;
+  overflow-y: auto;
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
 .holiday-controls,
 .button-row {
   display: flex;
@@ -227,6 +246,74 @@ button:focus-visible {
   background: #edf1f5;
   border-radius: 999px;
   font-size: 0.82rem;
+}
+.holiday-picker {
+  max-width: 390px;
+  padding: 0.75rem;
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.calendar-heading {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 2.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+.calendar-heading h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.calendar-nav {
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--brand);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.calendar-weekdays,
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.2rem;
+  text-align: center;
+}
+.calendar-weekdays {
+  margin-bottom: 0.25rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.calendar-day,
+.calendar-empty {
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 1;
+  place-items: center;
+}
+.calendar-day {
+  padding: 0;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.calendar-day:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+.calendar-day.is-listed {
+  color: var(--success);
+  background: #e9f8ef;
+  border-color: #9adbb5;
+  cursor: not-allowed;
+  opacity: 1;
 }
 .tag button {
   padding: 0;
@@ -388,6 +475,11 @@ button:focus-visible {
   text-align: left;
   border-bottom: 1px solid var(--line);
 }
+.schedule-table td:nth-child(3),
+.schedule-table td:nth-child(4),
+.schedule-table .total-days-row td {
+  text-align: center;
+}
 .schedule-table th {
   color: #384655;
   background: #f6f8fa;
@@ -400,6 +492,13 @@ button:focus-visible {
 }
 .schedule-table tr:nth-child(even) td {
   background: #fbfcfd;
+}
+.schedule-table .total-days-row th,
+.schedule-table .total-days-row td {
+  color: var(--brand-dark);
+  background: #f8ecee;
+  border-top: 2px solid var(--brand);
+  font-weight: 800;
 }
 .rules {
   margin-top: 1rem;
@@ -583,13 +682,9 @@ button:focus-visible {
     padding: 0;
   }
   .project-schedule {
-    margin: 0 0 14mm;
+    margin: 0;
     border: 0;
     box-shadow: none;
-    break-after: page;
-  }
-  .project-schedule:last-child {
-    break-after: auto;
   }
   .schedule-table {
     min-width: 0;
@@ -663,6 +758,28 @@ button:focus-visible {
   white-space: nowrap;
   font-size: 0.82rem;
   font-weight: 700;
+}
+.project-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.4rem;
+}
+.paper-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.paper-size-control select {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.6rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #9ba9b7;
+  border-radius: 8px;
+  font: inherit;
 }
 
 /* Each generated project is a self-contained printable/PDF page. */
@@ -744,6 +861,134 @@ button:focus-visible {
   margin: 0.18rem 0;
 }
 
+/* Compact output keeps each project's complete schedule on a single sheet. */
+.schedule-container.compact-output {
+  display: block;
+  gap: 0;
+}
+.compact-output .project-schedule {
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  box-shadow: none;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  break-before: auto;
+  page-break-before: auto;
+  break-after: auto;
+  page-break-after: auto;
+}
+.compact-output .project-schedule + .project-schedule {
+  break-before: auto;
+  page-break-before: auto;
+}
+.compact-output .schedule-head {
+  padding: 0 0 7pt;
+}
+.compact-output .schedule-brand {
+  gap: 0.6rem;
+  margin: 0 0 9pt;
+  padding-bottom: 5pt;
+}
+.compact-output .schedule-brand img {
+  width: 42pt;
+  height: 42pt;
+}
+.compact-output .university-name {
+  font-size: 11pt;
+}
+.compact-output .document-name {
+  font-size: 8pt;
+}
+.compact-output .schedule-head h3 {
+  margin: 0 0 5pt;
+  font-size: 15pt;
+  line-height: 1.15;
+}
+.compact-output .metadata {
+  gap: 3pt 12pt;
+  font-size: 9.5pt;
+  line-height: 1.2;
+}
+.compact-output .schedule-table {
+  width: 100% !important;
+  min-width: 0;
+  table-layout: fixed;
+  font-size: 11pt;
+  line-height: 1.3;
+}
+.compact-output .schedule-table th:first-child,
+.compact-output .schedule-table td:first-child {
+  width: 46%;
+}
+.compact-output .schedule-table th:nth-child(2),
+.compact-output .schedule-table td:nth-child(2) {
+  width: 23%;
+}
+.compact-output .schedule-table th:nth-child(3),
+.compact-output .schedule-table td:nth-child(3),
+.compact-output .schedule-table th:nth-child(4),
+.compact-output .schedule-table td:nth-child(4) {
+  width: 15.5%;
+}
+.compact-output .schedule-table th,
+.compact-output .schedule-table td {
+  padding: 10pt 6pt;
+  line-height: 1.3;
+}
+.compact-output .schedule-table th {
+  padding-top: 8pt;
+  padding-bottom: 8pt;
+  font-size: 10pt;
+}
+.compact-output .schedule-footer {
+  gap: 1rem;
+  padding: 12pt 6pt 0;
+  font-size: 8pt;
+  line-height: 1.2;
+}
+.compact-output .signatory {
+  min-width: 235px;
+}
+.compact-output .signature-line {
+  height: 1.4rem;
+}
+.compact-output .signatory strong {
+  font-size: 8pt;
+}
+.compact-output .table-wrap {
+  overflow: visible;
+}
+.compact-output .schedule-table {
+  display: table;
+}
+.compact-output .schedule-table thead {
+  display: table-header-group;
+}
+.compact-output .schedule-table tbody {
+  display: table-row-group;
+}
+.compact-output .schedule-table tr {
+  display: table-row;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.compact-output .schedule-table td,
+.compact-output .schedule-table th {
+  display: table-cell;
+  width: auto;
+}
+.compact-output .schedule-table td::before {
+  display: none;
+}
+@media print {
+  .compact-output .project-schedule + .project-schedule {
+    break-before: page;
+    page-break-before: always;
+  }
+}
+
 @media (max-width: 560px) {
   .schedule-brand {
     justify-content: flex-start;
@@ -761,7 +1006,23 @@ button:focus-visible {
   }
 }
 
+/* Page size is injected by printSchedules() from the paper-size select. */
+@page {
+  size: A4 portrait;
+  margin: 5mm;
+}
 @media print {
+  html,
+  body {
+    height: auto;
+    margin: 0;
+  }
+  .project-schedule {
+    overflow: hidden;
+  }
+  .paper-size-control {
+    display: none !important;
+  }
   .schedule-head {
     padding: 0 0 8pt;
   }
@@ -775,5 +1036,610 @@ button:focus-visible {
   }
   .schedule-footer {
     padding: 13pt 6pt 0;
+  }
+}
+
+/* Screen UI: consistent proportions for the procurement workspace. */
+@media screen {
+  html {
+    font-size: clamp(15px, 0.2vw + 14px, 16px);
+  }
+
+  body {
+    background: #f2f4f7;
+    line-height: 1.55;
+  }
+
+  .app-shell {
+    width: min(calc(100% - 3rem), 1320px);
+    padding: 2rem 0 4rem;
+  }
+
+  .app-header {
+    gap: 1rem;
+    min-height: 100px;
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.4rem;
+    background: #fff;
+    border: 1px solid #dfe5eb;
+    border-top: 3px solid var(--brand);
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(21, 35, 50, 0.035);
+  }
+
+  .brand-mark {
+    flex: 0 0 auto;
+    width: 58px;
+    max-height: 58px;
+  }
+
+  .app-header .eyebrow {
+    margin-bottom: 0.2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.075em;
+  }
+
+  h1 {
+    margin-bottom: 0.15rem;
+    font-size: clamp(1.35rem, 1.7vw, 1.8rem);
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .panel {
+    margin-bottom: 1rem;
+    padding: clamp(1.1rem, 1.8vw, 1.6rem);
+    border-color: #dfe5eb;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(21, 35, 50, 0.035);
+  }
+
+  .section-heading {
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid #e7ebf0;
+  }
+
+  .section-heading .eyebrow,
+  .results-heading .eyebrow {
+    display: inline-block;
+    margin-bottom: 0.3rem;
+    padding: 0.12rem 0.45rem;
+    color: var(--brand);
+    background: #f8ecee;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    letter-spacing: 0.07em;
+  }
+
+  .section-heading h2,
+  .results-heading h2,
+  .action-panel h2 {
+    font-size: 1.2rem;
+    letter-spacing: -0.015em;
+    line-height: 1.3;
+  }
+
+  .section-heading > p {
+    font-size: 0.86rem;
+  }
+
+  .settings-grid {
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .settings-grid > .field,
+  .settings-grid > .holiday-fieldset {
+    padding: 1rem;
+    background: #f9fafb;
+    border-color: #e2e7ed;
+    border-radius: 12px;
+  }
+
+  .settings-grid > .field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .settings-grid label,
+  .settings-grid legend,
+  .project-grid label {
+    color: #293746;
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+
+  .calendar-fieldset,
+  .saved-holidays-fieldset {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .calendar-fieldset legend,
+  .saved-holidays-fieldset legend {
+    width: 100%;
+    padding: 0;
+  }
+
+  input,
+  .paper-size-control select {
+    min-height: 2.7rem;
+    border-color: #bac4cf;
+    border-radius: 8px;
+  }
+
+  .hint,
+  .field-error {
+    font-size: 0.76rem;
+    line-height: 1.4;
+  }
+
+  .holiday-picker {
+    width: 100%;
+    max-width: none;
+    padding: 0.7rem;
+    background: #fff;
+    border-color: #e0e6ec;
+    border-radius: 10px;
+  }
+
+  .calendar-heading {
+    grid-template-columns: 2.35rem 1fr 2.35rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .calendar-nav {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 8px;
+  }
+
+  .calendar-weekdays,
+  .calendar-days {
+    gap: 0.25rem;
+  }
+
+  .calendar-day {
+    font-size: 0.8rem;
+  }
+
+  .saved-holidays-fieldset .tag-list {
+    flex: 1 1 auto;
+    min-height: 3rem;
+    margin-top: 0.5rem;
+    padding: 0.55rem;
+    align-content: start;
+    background: #fff;
+    border-color: #e0e6ec;
+  }
+
+  .holiday-controls {
+    gap: 0.2rem;
+  }
+
+  .holiday-controls .button {
+    min-height: 2.2rem;
+    padding: 0.3rem 0.45rem;
+    font-size: 0.78rem;
+  }
+
+  .button {
+    min-height: 2.7rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+  }
+
+  .button-secondary {
+    color: #344454;
+    background: #fff;
+    border-color: #cbd4de;
+  }
+
+  .button-secondary:hover {
+    color: #17212b;
+    background: #f5f7f9;
+    border-color: #aab6c2;
+  }
+
+  #downloadPdfBtn.button-secondary {
+    color: #fff;
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+
+  #downloadPdfBtn.button-secondary:hover {
+    color: #fff;
+    background: var(--brand-dark);
+    border-color: var(--brand-dark);
+  }
+
+  .project-grid {
+    gap: 0.8rem;
+    padding: 1rem;
+    background: #f8fafb;
+    border-color: #e2e7ed;
+    border-radius: 12px;
+  }
+
+  .project-grid .field label {
+    min-height: 2.7em;
+  }
+
+  .project-grid .form-action {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-self: stretch;
+    gap: 0.45rem;
+    min-height: 0;
+    padding: 2.7rem 0 0;
+    border-left: 0;
+  }
+
+  .project-grid .form-action .button {
+    min-width: 8rem;
+    white-space: nowrap;
+  }
+
+  .project-grid label[for="abcInput"] {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    white-space: normal;
+  }
+
+  .projects-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+    gap: 0.75rem;
+  }
+
+  .project-card {
+    align-items: center;
+    min-height: 88px;
+    padding: 0.9rem 1rem;
+    background: #fff;
+    border-color: #e1e6ec;
+    border-radius: 10px;
+  }
+
+  .project-card h3 {
+    font-size: 0.96rem;
+    line-height: 1.35;
+  }
+
+  .project-card p {
+    font-size: 0.82rem;
+  }
+
+  .project-actions {
+    gap: 0.4rem;
+  }
+
+  .project-card .icon-button {
+    min-width: auto;
+    min-height: 2.3rem;
+    padding: 0.35rem 0.55rem;
+    color: #344454;
+    background: #fff;
+    border-color: #cbd4de;
+    border-radius: 7px;
+    font-size: 0.78rem;
+  }
+
+  .project-card .remove-project {
+    color: var(--error);
+    border-color: #e6c7c4;
+  }
+
+  .action-panel {
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 1.1rem 1.35rem;
+    background: #fbf6f7;
+    border: 1px solid #ead9dc;
+    border-left: 4px solid var(--brand);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(21, 35, 50, 0.025);
+  }
+
+  .action-panel h2 {
+    margin-bottom: 0.15rem;
+  }
+
+  .action-panel p {
+    font-size: 0.86rem;
+  }
+
+  .action-panel .button-row {
+    flex: 0 0 auto;
+    gap: 0.45rem;
+  }
+
+  .results {
+    padding-top: 0.25rem;
+  }
+
+  .results-heading {
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem 1.2rem;
+    background: #fff;
+    border: 1px solid #dfe5eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(21, 35, 50, 0.025);
+  }
+
+  .results-heading .eyebrow {
+    margin-bottom: 0.2rem;
+  }
+
+  .results-heading h2 {
+    font-size: 1.15rem;
+  }
+
+  .export-actions {
+    gap: 0.45rem;
+  }
+
+  .export-actions .button {
+    min-height: 2.6rem;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.82rem;
+  }
+
+  .paper-size-control {
+    gap: 0.45rem;
+    white-space: nowrap;
+    font-size: 0.8rem;
+  }
+
+  .paper-size-control select {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.82rem;
+  }
+
+  .empty-state {
+    padding: 3rem 1.25rem;
+    background: #fff;
+    border-color: #cbd4de;
+    border-radius: 12px;
+  }
+
+  .rules {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+    background: #f8fafb;
+    border-color: #e2e7ed;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+
+  .rules h2 {
+    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
+  }
+
+  .rules p {
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+
+  .status {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+  }
+}
+
+@media screen and (min-width: 1240px) {
+  .project-grid {
+    grid-template-columns:
+      minmax(250px, 2fr) minmax(230px, 1.25fr) minmax(126px, 0.75fr)
+      minmax(126px, 0.75fr) auto;
+    align-items: stretch;
+  }
+}
+
+@media screen and (min-width: 561px) and (max-width: 1239px) {
+  .app-shell {
+    width: min(calc(100% - 2.5rem), 1320px);
+  }
+
+  .settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-grid > .field {
+    grid-column: span 2;
+  }
+
+  .project-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .project-grid .title-field,
+  .project-grid .form-action {
+    grid-column: span 2;
+  }
+
+  .project-grid .form-action {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 0;
+  }
+
+  .section-heading {
+    display: flex;
+  }
+
+  .section-heading > p {
+    margin-top: 0;
+    text-align: right;
+  }
+
+  .results-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .export-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media screen and (max-width: 560px) {
+  .app-shell {
+    width: calc(100% - 1.25rem);
+    padding-top: 0.75rem;
+  }
+
+  .app-header {
+    align-items: flex-start;
+    gap: 0.7rem;
+    min-height: 0;
+    margin-bottom: 0.9rem;
+    padding: 0.85rem;
+    border-radius: 12px;
+  }
+
+  .brand-mark {
+    width: 44px;
+    max-height: 44px;
+  }
+
+  .app-header .eyebrow {
+    font-size: 0.62rem;
+    line-height: 1.35;
+  }
+
+  h1 {
+    font-size: 1.22rem;
+  }
+
+  .subtitle {
+    font-size: 0.82rem;
+  }
+
+  .panel {
+    margin-bottom: 0.8rem;
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .section-heading {
+    display: block;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .section-heading > p {
+    margin-top: 0.5rem;
+    text-align: left;
+  }
+
+  .settings-grid,
+  .project-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .settings-grid > .field,
+  .project-grid .title-field,
+  .project-grid .form-action {
+    grid-column: auto;
+  }
+
+  .settings-grid > .field,
+  .settings-grid > .holiday-fieldset {
+    padding: 0.85rem;
+  }
+
+  .project-grid {
+    padding: 0.8rem;
+  }
+
+  .project-grid .field label {
+    min-height: 0;
+  }
+
+  .project-grid .form-action {
+    flex-direction: row;
+  }
+
+  .project-grid .form-action .button {
+    flex: 1 1 auto;
+  }
+
+  .projects-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .project-card {
+    align-items: flex-start;
+    padding: 0.8rem;
+  }
+
+  .project-actions {
+    flex-direction: column;
+  }
+
+  .action-panel {
+    display: block;
+    padding: 1rem;
+  }
+
+  .action-panel .button-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: 0.9rem;
+  }
+
+  .action-panel .button-row .button {
+    width: 100%;
+  }
+
+  .results-heading {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    padding: 0.95rem;
+  }
+
+  .export-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .paper-size-control {
+    grid-column: span 2;
+    justify-content: space-between;
+  }
+
+  .paper-size-control select {
+    flex: 0 1 62%;
+  }
+
+  .export-actions > .button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 0.4rem;
+    white-space: nowrap;
+  }
+
+  .rules {
+    margin-top: 0.8rem;
+    padding: 0.9rem 1rem;
   }
 }
