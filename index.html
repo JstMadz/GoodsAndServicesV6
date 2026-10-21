@@ -3,300 +3,129 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#7b1020" />
-    <title>Procurement Schedule Builder | TUP</title>
-    <link rel="icon" type="image/png" href="tup_logo.png?v=20260802" />
-    <link rel="apple-touch-icon" href="tup_logo.png?v=20260802" />
+    <meta name="theme-color" content="#8b1538" />
+    <title>Goods &amp; Services Procurement Scheduler | TUP Manila</title>
+    <link rel="icon" type="image/png" href="tup_logo.png?v=20261021" />
+    <link rel="apple-touch-icon" href="tup_logo.png?v=20261021" />
     <link rel="stylesheet" href="style.css?v=20261021" />
-    <script
-      defer
-      src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"
-    ></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <script defer src="script.js?v=20261021"></script>
   </head>
-  <body>
+  <body class="scheduler-page">
     <a class="skip-link" href="#projectForm">Skip to schedule form</a>
     <main class="app-shell">
-      <header class="app-header">
-        <img
-          class="brand-mark"
-          src="tup_logo.png"
-          alt="Technological University of the Philippines logo"
-          onerror="this.hidden = true"
-        />
-        <div>
-          <p class="eyebrow">Technological University of the Philippines</p>
-          <h1>Goods.Services.Infra Procurement Schedule Builder</h1>
-          <p class="subtitle">Bids and Awards Committee</p>
-        </div>
-      </header>
-
-      <div
-        id="appStatus"
-        class="status"
-        role="status"
-        aria-live="polite"
-        hidden
-      ></div>
-
-      <section class="panel" aria-labelledby="scheduleSetupHeading">
-        <div class="section-heading">
+      <section class="app-card" aria-labelledby="pageTitle">
+        <header class="app-header">
+          <img class="screen-logo" src="tup_logo.png" alt="Technological University of the Philippines logo" onerror="this.hidden = true" />
           <div>
-            <p class="eyebrow">Step 1</p>
-            <h2 id="scheduleSetupHeading">Schedule settings</h2>
+            <p class="eyebrow">Technological University of the Philippines – Manila</p>
+            <h1 id="pageTitle">Goods &amp; Services Procurement Scheduler</h1>
+            <p class="subtitle">Bids and Awards Committee</p>
           </div>
-          <p>Dates are adjusted for weekends and your listed holidays.</p>
-        </div>
-        <div class="settings-grid">
-          <div class="field">
-            <label for="preprocDate"
-              >Pre-procurement conference date
-              <span aria-hidden="true">*</span></label
-            >
-            <input
-              id="preprocDate"
-              type="date"
-              required
-              aria-describedby="preprocHelp preprocError"
-            />
-            <p id="preprocHelp" class="hint">
-              The anchor date used to calculate every project schedule.
-            </p>
-            <p id="preprocError" class="field-error" aria-live="polite"></p>
-          </div>
-          <fieldset class="holiday-fieldset calendar-fieldset">
-            <legend>Select non-working dates</legend>
-            <div class="holiday-picker">
-              <div class="calendar-heading">
-                <button id="holidayPrevMonth" class="calendar-nav" type="button" aria-label="Previous month">‹</button>
-                <h3 id="holidayCalendarMonth" aria-live="polite"></h3>
-                <button id="holidayNextMonth" class="calendar-nav" type="button" aria-label="Next month">›</button>
-              </div>
-              <div class="calendar-weekdays" aria-hidden="true">
-                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-              </div>
-              <div id="holidayCalendarDays" class="calendar-days" role="group" aria-label="Choose non-working dates"></div>
-            </div>
-          </fieldset>
-          <fieldset class="holiday-fieldset saved-holidays-fieldset">
-            <legend>Chosen non-working days</legend>
-            <div class="holiday-controls">
-              <button
-                id="clearHolidaysBtn"
-                class="button button-text"
-                type="button"
-              >
-                Clear all
-              </button>
-              <input
-                id="loadHolidaysFile"
-                type="file"
-                accept="application/json,.json"
-                hidden
-              />
-              <button
-                id="loadHolidaysBtn"
-                class="button button-text"
-                type="button"
-              >
-                Import
-              </button>
-              <button
-                id="saveHolidaysBtn"
-                class="button button-text"
-                type="button"
-              >
-                Export
-              </button>
-            </div>
-            <div id="holidayList" class="tag-list" aria-live="polite"></div>
-          </fieldset>
-        </div>
-      </section>
+        </header>
 
-      <section class="panel" aria-labelledby="projectFormHeading">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Step 2</p>
-            <h2 id="projectFormHeading">Add a project</h2>
-          </div>
-          <p><span aria-hidden="true">*</span> Required fields</p>
-        </div>
+        <div id="appStatus" class="form-status" role="status" aria-live="polite" hidden></div>
+
         <form id="projectForm" novalidate>
-          <div class="project-grid">
-            <div class="field title-field">
-              <label for="projectTitle"
-                >Project title <span aria-hidden="true">*</span></label
-              >
-              <input
-                id="projectTitle"
-                type="text"
-                maxlength="160"
-                autocomplete="off"
-                placeholder="e.g., Procurement of IT equipment for computer labs"
-                required
-                aria-describedby="titleError"
-              />
-              <p id="titleError" class="field-error" aria-live="polite"></p>
-            </div>
-            <div class="field">
-              <label for="abcInput"
-                >Approved budget (ABC)
-                <span aria-hidden="true">*</span></label
-              >
-              <div class="currency-input">
-                <span aria-hidden="true">₱</span
-                ><input
-                  id="abcInput"
-                  type="text"
-                  aria-label="Approved Budget for the Contract (ABC)"
-                  inputmode="decimal"
-                  autocomplete="off"
-                  placeholder="0.00"
-                  required
-                  aria-describedby="abcHelp abcError"
-                />
+          <fieldset class="form-panel">
+            <legend><span class="step-marker">Step 1</span><span>Project information</span></legend>
+            <div class="form-grid project-grid">
+              <div class="field">
+                <label for="projectTitle">Project title <span aria-hidden="true">*</span></label>
+                <input id="projectTitle" type="text" maxlength="160" autocomplete="off" placeholder="e.g., Procurement of IT equipment for computer labs" required aria-describedby="titleError" />
+                <p id="titleError" class="field-error" aria-live="polite"></p>
               </div>
-              <p id="abcHelp" class="hint">
-                Numbers only; maximum two decimal places.
-              </p>
-              <p id="abcError" class="field-error" aria-live="polite"></p>
+              <div class="field">
+                <label for="abcInput">Approved budget (ABC) <span aria-hidden="true">*</span></label>
+                <div class="currency-input"><span aria-hidden="true">₱</span><input id="abcInput" type="text" inputmode="decimal" autocomplete="off" placeholder="1,000,000.00" required aria-label="Approved Budget for the Contract (ABC)" aria-describedby="abcHelp abcError" /></div>
+                <p id="abcHelp" class="field-hint">Enter a value from ₱0.01 to ₱999,999,999,999.99.</p>
+                <p id="abcError" class="field-error" aria-live="polite"></p>
+              </div>
             </div>
-            <div class="field">
-              <label for="startTime"
-                >Start time <span aria-hidden="true">*</span></label
-              ><input
-                id="startTime"
-                type="time"
-                required
-                aria-describedby="startError"
-              />
-              <p id="startError" class="field-error" aria-live="polite"></p>
+          </fieldset>
+
+          <fieldset class="form-panel">
+            <legend><span class="step-marker">Step 2</span><span>Schedule setup</span></legend>
+            <div class="form-grid schedule-grid">
+              <div class="field">
+                <label for="preprocDate">Pre-procurement conference date <span aria-hidden="true">*</span></label>
+                <input id="preprocDate" type="date" required aria-describedby="preprocHelp preprocError" />
+                <p id="preprocHelp" class="field-hint">The anchor date for the procurement schedule.</p>
+                <p id="preprocError" class="field-error" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label for="startTime">Start time <span aria-hidden="true">*</span></label>
+                <input id="startTime" type="time" required aria-describedby="startError" />
+                <p id="startError" class="field-error" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label for="endTime">End time <span aria-hidden="true">*</span></label>
+                <input id="endTime" type="time" required aria-describedby="endError" />
+                <p id="endError" class="field-error" aria-live="polite"></p>
+              </div>
             </div>
-            <div class="field">
-              <label for="endTime"
-                >End time <span aria-hidden="true">*</span></label
-              ><input
-                id="endTime"
-                type="time"
-                required
-                aria-describedby="endError"
-              />
-              <p id="endError" class="field-error" aria-live="polite"></p>
+          </fieldset>
+
+          <fieldset class="form-panel holidays-panel">
+            <legend><span class="step-marker">Step 3</span><span>Non-working dates</span></legend>
+            <div class="holiday-picker-grid">
+              <div class="calendar-card">
+                <div class="calendar-heading">
+                  <button id="holidayPrevMonth" class="calendar-nav" type="button" aria-label="Previous month">‹</button>
+                  <h3 id="holidayCalendarMonth" aria-live="polite"></h3>
+                  <button id="holidayNextMonth" class="calendar-nav" type="button" aria-label="Next month">›</button>
+                </div>
+                <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+                <div id="holidayCalendarDays" class="calendar-days" role="group" aria-label="Choose non-working dates"></div>
+              </div>
+              <div class="selected-holidays">
+                <div class="selected-holidays-heading">
+                  <div><h3>Chosen non-working days</h3><p class="field-hint">Select multiple dates on the calendar.</p></div>
+                  <button id="clearHolidaysBtn" class="button button-text" type="button" disabled>Clear all</button>
+                </div>
+                <div id="holidayList" class="holiday-list" aria-live="polite"></div>
+                <div class="file-actions">
+                  <button id="saveHolidaysBtn" class="button button-quiet" type="button">Export dates</button>
+                  <label class="file-label" for="loadHolidaysFile">Import dates</label>
+                  <input id="loadHolidaysFile" type="file" accept="application/json,.json" hidden />
+                  <button id="loadHolidaysBtn" class="button button-quiet" type="button">Load selected file</button>
+                </div>
+              </div>
             </div>
-            <div class="form-action">
-              <button id="addProjectBtn" class="button" type="submit">
-                Add project
-              </button>
-              <button id="cancelEditBtn" class="button button-text" type="button" hidden>Cancel edit</button>
-            </div>
+          </fieldset>
+
+          <div class="button-row form-actions">
+            <button id="addProjectBtn" class="button button-primary" type="submit">Generate project schedule</button>
+            <button id="cancelEditBtn" class="button button-quiet" type="button" hidden>Cancel edit</button>
           </div>
         </form>
-      </section>
 
-      <section class="panel" aria-labelledby="projectsHeading">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Step 3</p>
-            <h2 id="projectsHeading">
-              Projects <span id="projectCount" class="count">0</span>
-            </h2>
+        <section id="results" class="project-schedules" hidden aria-labelledby="resultsHeading" tabindex="-1">
+          <div class="output-toolbar">
+            <div>
+              <p class="eyebrow">Output</p>
+              <h2 id="resultsHeading">Project schedules</h2>
+              <p id="projectCount" class="generated-at"></p>
+            </div>
+            <div class="button-row export-actions">
+              <label class="paper-size-control" for="paperSize">Paper size
+                <select id="paperSize"><option value="a4">A4</option><option value="folio">8.5 × 13 in (Folio)</option></select>
+              </label>
+              <button id="exportCsvBtn" class="button button-quiet" type="button" disabled>Export CSV</button>
+              <button id="exportJsonBtn" class="button button-quiet" type="button" disabled>Export JSON</button>
+              <button id="downloadPdfBtn" class="button button-primary" type="button" disabled>Download PDF</button>
+              <button id="printBtn" class="button button-secondary" type="button" disabled>Print all</button>
+              <button id="resetBtn" class="button button-danger" type="button">Reset workspace</button>
+            </div>
           </div>
-          <p>Review project details before generating schedules.</p>
-        </div>
-        <div id="projectsList" class="projects-list" aria-live="polite"></div>
-      </section>
+          <div id="schedulesContainer" class="schedule-container schedule-list" aria-live="polite"></div>
+        </section>
 
-      <section class="panel action-panel" aria-label="Schedule actions">
-        <div>
-          <h2>Generate schedules</h2>
-          <p>
-            Create schedules for all added projects using the selected
-            conference date.
-          </p>
-        </div>
-        <div class="button-row">
-          <button id="generateBtn" class="button" type="button">
-            Generate schedules</button
-          ><button
-            id="resetBtn"
-            class="button button-text danger"
-            type="button"
-          >
-            Reset workspace
-          </button>
-        </div>
+        <aside class="rules" aria-labelledby="rulesHeading">
+          <h2 id="rulesHeading">Calculation rules</h2>
+          <p>Advertisement: +3 calendar days; Pre-bid: +7 calendar days; Deadline: +12 calendar days. These move forward to the next working day when necessary. Clarification and supplemental bulletin dates are set 9 and 7 calendar days before the deadline and move back to the preceding working day. Subsequent activities use working days. Additional days are optional offsets to each activity's existing interval.</p>
+        </aside>
       </section>
-
-      <section
-        id="results"
-        class="results"
-        aria-labelledby="resultsHeading"
-        tabindex="-1"
-      >
-        <div class="results-heading">
-          <div>
-            <p class="eyebrow">Output</p>
-            <h2 id="resultsHeading">Procurement schedules</h2>
-          </div>
-          <div class="button-row export-actions">
-            <label class="paper-size-control" for="paperSize">Paper size
-              <select id="paperSize">
-                <option value="a4">A4</option>
-                <option value="folio">8.5 × 13 in (Folio)</option>
-              </select>
-            </label>
-            <button
-              id="exportCsvBtn"
-              class="button button-secondary"
-              type="button"
-              disabled
-            >
-              Export CSV</button
-            ><button
-              id="exportJsonBtn"
-              class="button button-secondary"
-              type="button"
-              disabled
-            >
-              Export JSON</button
-            ><button
-              id="downloadPdfBtn"
-              class="button button-secondary"
-              type="button"
-              disabled
-            >
-              Download PDF</button
-            ><button
-              id="printBtn"
-              class="button button-secondary"
-              type="button"
-              disabled
-            >
-              Print all
-            </button>
-          </div>
-        </div>
-        <div id="schedulesContainer" class="schedule-container">
-          <div class="empty-state">
-            <h3>No schedules yet</h3>
-            <p>
-              Add one or more projects, select a conference date, then generate.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <aside class="rules" aria-labelledby="rulesHeading">
-        <h2 id="rulesHeading">Calculation rules</h2>
-        <p>
-          Advertisement: +3 calendar days; Pre-bid: +7 calendar days; Deadline:
-          +12 calendar days. These move forward to the next working day when
-          necessary. Clarification and supplemental bulletin dates are set 9 and
-          7 calendar days before the deadline and move back to the preceding
-          working day. Subsequent activities use working days.
-        </p>
-      </aside>
     </main>
   </body>
 </html>
