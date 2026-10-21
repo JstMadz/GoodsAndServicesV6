@@ -2401,3 +2401,578 @@ fieldset.form-panel legend {
     padding: 0.9rem 1rem;
   }
 }
+
+/* Final screen refinements: keep each step visually clear without nesting a
+   second card inside the project-information panel. */
+@media screen {
+  #projectForm {
+    margin-top: clamp(20px, 2.2vw, 30px);
+  }
+
+  fieldset.form-panel {
+    margin-bottom: 16px;
+    padding: clamp(17px, 1.8vw, 24px);
+    background: #fff;
+    border-color: #d8e0e8;
+    border-radius: 14px;
+  }
+
+  fieldset.form-panel legend {
+    gap: 10px;
+    padding-inline: 10px;
+    font-size: 0.98rem;
+  }
+
+  .form-grid {
+    gap: clamp(14px, 1.5vw, 20px);
+  }
+
+  .project-grid {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .project-grid .field label,
+  .schedule-grid .field label {
+    min-height: 0;
+    line-height: 1.35;
+  }
+
+  .field-hint,
+  .field-error {
+    line-height: 1.4;
+  }
+
+  .holiday-picker-grid {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 16px;
+  }
+
+  .calendar-card,
+  .selected-holidays {
+    padding: clamp(14px, 1.5vw, 18px);
+    background: #f8fafc;
+    border-color: #dce4ec;
+    border-radius: 12px;
+  }
+
+  .calendar-day {
+    width: min(100%, 3.2rem);
+    min-height: 40px;
+    justify-self: center;
+  }
+
+  .output-toolbar {
+    align-items: center;
+    margin-top: 4px;
+    padding: 18px 20px;
+    background: #f8fafc;
+    border: 1px solid #dce4ec;
+    border-radius: 14px;
+  }
+
+  .project-schedules {
+    margin-top: 24px;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .rules {
+    margin-top: 20px;
+    padding: 18px 20px;
+    background: #f8fafc;
+    border-color: #dce4ec;
+    border-radius: 12px;
+  }
+
+  .button:focus-visible,
+  .form-panel input:focus-visible,
+  .form-panel select:focus-visible,
+  .paper-size-control select:focus-visible,
+  .adjust-input:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--focus) 36%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+@media screen and (min-width: 761px) {
+  .project-grid {
+    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
+    align-items: start;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  .project-grid,
+  .holiday-picker-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .output-toolbar {
+    padding: 16px;
+  }
+}
+
+/* Keep the exported document footer consistent in browser print and PDF. */
+.compact-output .schedule-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.compact-output .document-timestamps {
+  order: 1;
+  flex: 1 1 auto;
+  margin-right: auto;
+  text-align: left;
+}
+
+.compact-output .signatory {
+  order: 2;
+  flex: 0 0 min(42%, 245px);
+  min-width: 180px;
+  margin-left: auto;
+  text-align: center;
+}
+
+.compact-output .signature-line {
+  width: 100%;
+}
+
+/* The saved PDF grows typography and row spacing without browser zoom so text
+   remains crisp and word spaces stay consistent in html2canvas. */
+.pdf-export-source .pdf-document {
+  --pdf-layout-scale: 1;
+}
+
+.pdf-export-source .pdf-document .schedule-brand {
+  gap: calc(0.6rem * var(--pdf-layout-scale));
+  margin-bottom: calc(8pt * var(--pdf-layout-scale));
+  padding-bottom: calc(6pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .schedule-brand img {
+  width: calc(38pt * var(--pdf-layout-scale));
+  height: calc(38pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .university-name {
+  font-size: calc(10pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .document-name {
+  font-size: calc(8pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .schedule-head {
+  margin-bottom: calc(6pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .schedule-title-row {
+  margin-bottom: calc(6pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .schedule-title-row h3 {
+  font-size: calc(14pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .metadata {
+  gap: calc(4pt * var(--pdf-layout-scale)) calc(12pt * var(--pdf-layout-scale));
+  font-size: calc(8pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .schedule-table {
+  font-size: calc(8.1pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .schedule-table th,
+.pdf-export-source .pdf-document .schedule-table td {
+  padding: calc(6pt * var(--pdf-layout-scale)) calc(4pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .schedule-table thead th {
+  font-size: calc(7.6pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .adjust-input {
+  width: calc(38px * var(--pdf-layout-scale));
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.pdf-export-source .pdf-document .schedule-footer {
+  gap: calc(14pt * var(--pdf-layout-scale));
+  margin-top: calc(14pt * var(--pdf-layout-scale));
+  padding-top: calc(8pt * var(--pdf-layout-scale));
+  font-size: calc(7.5pt * var(--pdf-layout-scale));
+}
+
+.pdf-export-source .pdf-document .signatory {
+  min-width: 180px;
+}
+
+.pdf-export-source .pdf-document .signature-line {
+  height: calc(18pt * var(--pdf-layout-scale));
+}
+
+/* Institutional procurement workspace screen layout. */
+@media screen {
+  .app-header {
+    min-height: 0;
+    margin: 0 0 clamp(22px, 2.4vw, 32px);
+    padding: 0 0 clamp(18px, 2vw, 24px);
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid var(--brand);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .screen-logo {
+    width: clamp(56px, 5vw, 76px);
+    max-height: 76px;
+  }
+
+  .app-header .eyebrow {
+    margin-bottom: 6px;
+    color: var(--brand);
+    font-size: 0.76rem;
+    letter-spacing: 0.075em;
+    line-height: 1.4;
+  }
+
+  .app-header h1 {
+    margin: 0 0 5px;
+    color: #17232e;
+    font-size: clamp(1.55rem, 2.5vw, 2.2rem);
+    letter-spacing: -0.025em;
+    line-height: 1.16;
+  }
+
+  .app-header .subtitle {
+    color: #4c5c6b;
+    font-size: 0.9rem;
+  }
+
+  #projectForm {
+    margin-top: 0;
+  }
+
+  fieldset.form-panel {
+    margin-bottom: 16px;
+    padding: clamp(16px, 1.55vw, 22px);
+    background: #fff;
+    border: 1px solid #d6dee7;
+    border-radius: 12px;
+  }
+
+  fieldset.form-panel legend {
+    gap: 10px;
+    color: #65102a;
+    font-size: 0.98rem;
+    font-weight: 750;
+  }
+
+  .step-marker {
+    min-width: 4.15rem;
+    min-height: 1.7rem;
+    padding: 0.12rem 0.5rem;
+    background: #f8edf0;
+  }
+
+  .form-grid {
+    gap: clamp(16px, 1.8vw, 24px);
+  }
+
+  .project-grid {
+    grid-template-columns: minmax(0, 1.72fr) minmax(320px, 0.95fr);
+    align-items: start;
+  }
+
+  .schedule-grid {
+    grid-template-columns: minmax(260px, 1.4fr) repeat(2, minmax(170px, 0.85fr));
+  }
+
+  .field label {
+    min-height: 0;
+    margin-bottom: 7px;
+    color: #344454;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .form-panel input,
+  .form-panel select {
+    min-height: 48px;
+    padding: 10px 13px;
+    border-color: #b9c5d2;
+    border-radius: 8px;
+  }
+
+  .currency-input {
+    border-color: #b9c5d2;
+    border-radius: 8px;
+  }
+
+  .field-hint,
+  .field-error {
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .holiday-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(14px, 1.5vw, 20px);
+  }
+
+  .calendar-card,
+  .selected-holidays {
+    padding: clamp(14px, 1.5vw, 18px);
+    border-color: #d9e1e9;
+    border-radius: 11px;
+  }
+
+  .selected-holidays {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .holiday-list {
+    flex: 1 1 auto;
+    min-height: 112px;
+    overflow: auto;
+    border-color: #d8e0e8;
+  }
+
+  .file-actions {
+    margin-top: auto;
+    padding-top: 14px;
+  }
+
+  .form-actions {
+    margin-top: 4px;
+  }
+
+  .button-primary,
+  .button-secondary,
+  .button-outline,
+  .button-quiet,
+  .button-danger {
+    min-height: 46px;
+    border-radius: 8px;
+  }
+
+  .form-actions .button-primary {
+    min-width: 248px;
+  }
+
+  .rules {
+    margin-top: 20px;
+    padding: 17px 20px;
+    border-left: 4px solid var(--brand);
+    border-radius: 8px;
+    line-height: 1.6;
+  }
+
+  .rules h2 {
+    color: #263645;
+    font-size: 1rem;
+  }
+
+  .rules p {
+    max-width: 110rem;
+    margin-top: 7px;
+    color: #4d5d6c;
+    font-size: 0.84rem;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  .app-header {
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .screen-logo {
+    width: 52px;
+  }
+
+  .project-grid,
+  .schedule-grid,
+  .holiday-picker-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .project-grid {
+    gap: 14px;
+  }
+
+  .table-container,
+  .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .schedule-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .schedule-table tr {
+    width: 100%;
+  }
+
+  .schedule-table td {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 6px 10px;
+    padding: 9px 10px;
+    text-align: right;
+  }
+
+  .schedule-table td::before {
+    display: block !important;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: left;
+  }
+
+  .schedule-table tbody td:nth-child(1)::before {
+    content: "Procurement activity";
+  }
+
+  .schedule-table tbody td:nth-child(2)::before {
+    content: "Minimum days";
+  }
+
+  .schedule-table tbody td:nth-child(3)::before {
+    content: "Maximum days";
+  }
+
+  .schedule-table tbody td:nth-child(4)::before {
+    content: "Additional days";
+  }
+
+  .schedule-table tbody td:nth-child(5)::before {
+    content: "Scheduled date";
+  }
+
+  .schedule-table tbody td:nth-child(6)::before {
+    content: "Elapsed calendar days";
+  }
+
+  .schedule-table td:first-child {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .schedule-table tfoot {
+    display: block;
+  }
+
+  .schedule-table .total-days-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+  }
+
+  .schedule-table .total-days-row th {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 10px;
+  }
+
+  .schedule-table .total-days-row td {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 9px;
+    border-top: 1px solid #ead1d6;
+    text-align: center;
+  }
+
+  .schedule-table .total-days-row td:nth-of-type(1)::before {
+    content: "Minimum days";
+  }
+
+  .schedule-table .total-days-row td:nth-of-type(2)::before {
+    content: "Maximum days";
+  }
+
+  .schedule-table .total-days-row td:nth-of-type(3)::before {
+    content: "Additional days";
+  }
+
+  .schedule-table .total-days-row td:nth-of-type(4) {
+    display: none;
+  }
+
+  .schedule-table .total-days-row td:nth-of-type(5)::before {
+    content: "Elapsed calendar days";
+  }
+
+  .form-actions .button-primary {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .selected-holidays {
+    display: block;
+  }
+
+  .holiday-list {
+    min-height: 96px;
+  }
+
+  .file-actions {
+    padding-top: 0;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .app-header {
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 17px;
+  }
+
+  .screen-logo {
+    width: 46px;
+  }
+
+  .app-header .eyebrow {
+    font-size: 0.66rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.3rem;
+  }
+
+  fieldset.form-panel {
+    padding: 15px 13px;
+  }
+
+  fieldset.form-panel legend {
+    gap: 7px;
+    font-size: 0.92rem;
+  }
+
+  .step-marker {
+    min-width: 3.75rem;
+  }
+
+  .selected-holidays-heading {
+    flex-direction: row;
+  }
+
+  .rules {
+    padding: 15px;
+  }
+}

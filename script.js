@@ -516,6 +516,26 @@ function fitScheduleToPage(schedule, paper, margin) {
   schedule.style.zoom = String(low);
   schedule.style.width = `${width / low}px`;
 }
+// Size PDF typography and row spacing before rasterizing. CSS zoom looks fine
+// in the print dialog but can distort word spacing in html2canvas output.
+function fitPdfScheduleToPage(schedule, paper, margin) {
+  const width = (paper.width - margin * 2) * MM_TO_PX;
+  const height = (paper.height - margin * 2 - 2) * MM_TO_PX;
+  schedule.style.zoom = "";
+  schedule.style.width = `${width}px`;
+  schedule.classList.add("pdf-document");
+
+  const naturalHeight = schedule.scrollHeight;
+  let low = naturalHeight > height ? 0.45 : 1;
+  let high = naturalHeight > height ? 1 : 1.55;
+  for (let i = 0; i < 14; i++) {
+    const scale = (low + high) / 2;
+    schedule.style.setProperty("--pdf-layout-scale", String(scale));
+    if (schedule.scrollHeight <= height) low = scale;
+    else high = scale;
+  }
+  schedule.style.setProperty("--pdf-layout-scale", String(low));
+}
 function fitSchedulesToPage(paper, margin) {
   els.schedulesContainer
     .querySelectorAll(".project-schedule:not(.legacy-project)")
@@ -597,7 +617,7 @@ async function pdfSchedules() {
       ".project-schedule:not(.legacy-project)",
     )) {
       const page = document.createElement("div");
-      page.className = "schedule-container schedule-list compact-output";
+      page.className = "schedule-container schedule-list compact-output pdf-export-source";
       const scheduleCopy = schedule.cloneNode(true);
       page.appendChild(scheduleCopy);
       document.body.appendChild(page);
@@ -605,7 +625,7 @@ async function pdfSchedules() {
       page.style.margin = "0";
       page.style.padding = "0";
       page.style.overflow = "visible";
-      fitScheduleToPage(scheduleCopy, paper, PDF_MARGIN_MM);
+      fitPdfScheduleToPage(scheduleCopy, paper, PDF_MARGIN_MM);
       try {
         const canvas = await window
           .html2pdf()
