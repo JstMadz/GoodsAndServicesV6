@@ -4,7 +4,8 @@ const activities = [
   ["Pre-Procurement Conference", 0, "anchor"],
   ["Advertisement / Posting of Invitation to Bid", 3, "after-preproc"],
   ["Pre-Bid Conference", 7, "after-advertisement"],
-  ["Last Day of Clarification from Bidders", 9, "before-deadline"],
+  // RA 12009 IRR 51.5.1: clarifications at least 10 CD, bid bulletins at least 7 CD, before the deadline.
+  ["Last Day of Clarification from Bidders", 10, "before-deadline"],
   ["Posting of Supplemental Bid Bulletin", 7, "before-deadline"],
   [
     "Deadline of Submission and Receipt of Bids / Bid Opening",
