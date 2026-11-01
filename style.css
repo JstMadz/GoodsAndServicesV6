@@ -3127,3 +3127,11 @@ fieldset.form-panel legend {
     margin-left: 0;
   }
 }
+
+/* RA 12009 checks under each schedule: on screen only, never printed or in the PDF. */
+.ra-notes { margin: 0.75rem 0 0; padding: 0.6rem 0.8rem; border-radius: 8px; background: #fff4e0; color: #6b4200; font-size: 0.875rem; }
+.ra-notes.ok { background: #e8f5e8; color: #1d5e1d; }
+.ra-notes ul { margin: 0.25rem 0 0; padding-left: 1.1rem; }
+.ra-notes .ra-info { margin: 0.35rem 0 0; color: #3d4650; }
+.pdf-export-source .ra-notes { display: none !important; }
+@media print { .ra-notes { display: none !important; } }

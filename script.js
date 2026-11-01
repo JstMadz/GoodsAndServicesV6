@@ -257,7 +257,7 @@ function renderScheduleCard({ project, rows, createdAt }) {
   const totalAdditional = rows.reduce((sum, row) => sum + row.extra, 0);
   const last = rows.at(-1);
   return `<article class="project-schedule" data-id="${project.id}">
-    <header class="schedule-brand"><img src="tup_logo.png" alt=""><div><p class="university-name">Technological University of the Philippines – Manila</p><p class="document-name">Goods &amp; Services Procurement Schedule</p></div></header>
+    <header class="schedule-brand"><img src="tup_logo.png" alt=""><div><p class="university-name">Technological University of the Philippines – Manila</p><p class="document-name">Goods &amp; Services Procurement Schedule · RA 12009 and its IRR</p></div></header>
     <div class="schedule-head">
       <div class="schedule-title-row"><h3>${escapeHtml(project.title)}</h3><div class="project-actions"><button type="button" class="button button-outline edit-project" data-id="${project.id}">Edit project</button><button type="button" class="button button-danger remove-project" data-id="${project.id}">Remove project</button></div></div>
       <div class="metadata"><span><strong>ABC:</strong> ${money(project.abc)}</span><span><strong>Schedule time:</strong> ${time12(project.startTime)}–${time12(project.endTime)}</span><span><strong>Anchor date:</strong> ${readable(start)}</span></div>
@@ -267,11 +267,50 @@ function renderScheduleCard({ project, rows, createdAt }) {
       <tbody>${rows.map((row) => `<tr><td>${escapeHtml(row.activity)}</td><td>${row.minDays}</td><td>${row.maxDays}</td><td><input class="adjust-input" type="number" min="0" max="3650" step="1" value="${row.extra}" data-id="${project.id}" data-index="${row.index}" aria-label="Additional days for ${escapeHtml(row.activity)}" ${row.index === 0 ? 'disabled title="The pre-procurement date is the schedule anchor."' : ""}><span class="row-error"></span></td><td>${row.date}</td><td>${between(start, row.dateValue)}</td></tr>`).join("")}</tbody>
       <tfoot><tr class="total-days-row"><th scope="row">TOTAL COUNTED DAYS</th><td>${totalMin.toLocaleString("en-PH")}</td><td>${totalMax.toLocaleString("en-PH")}</td><td>${totalAdditional.toLocaleString("en-PH")}</td><td></td><td>${between(start, last.dateValue).toLocaleString("en-PH")}</td></tr></tfoot></table>
     </div>
+    ${ra12009Notes(rows, project.abc)}
     <footer class="schedule-footer"><div class="signatory"><p>Prepared by:</p><div class="signature-line"></div><strong>Signature over printed name</strong><span>Procurement Office</span></div><div class="document-timestamps"><p><strong>Created:</strong> ${createdAt}</p><p><strong>Printed:</strong> <time class="output-printed-at">Not printed yet</time></p></div></footer>
   </article>`;
 }
 function between(start, end) {
   return Math.round((end - start) / 86400000);
+}
+// RA 12009 IRR periods, checked on the computed dates (the same checks as the Bidding
+// Document Generator). A maximum period ending on a non-working day runs to the next
+// working day (IRR 67.3).
+function lateBy(from, to, days) {
+  return to > nextWorking(shift(from, days));
+}
+function ra12009Notes(rows, abc) {
+  const d = rows.map((row) => row.dateValue);
+  const notes = [];
+  if (between(d[1], d[2]) < 7)
+    notes.push(["IRR 51.2", "The pre-bid conference must be at least 7 calendar days after posting."]);
+  if (between(d[2], d[5]) < 12)
+    notes.push(["IRR 51.2", "The pre-bid conference must be at least 12 calendar days before the bid deadline."]);
+  if (between(d[3], d[5]) < 10)
+    notes.push(["IRR 51.5.1", "Requests for clarification must be in at least 10 calendar days before the bid deadline."]);
+  if (between(d[4], d[5]) < 7)
+    notes.push(["IRR 51.5.1", "Bid bulletins must be issued at least 7 calendar days before the bid deadline."]);
+  // Posting runs 7 CD from the advertisement date (IRR 50.3.1); 54.5 counts from its last day.
+  if (lateBy(shift(d[1], 6), d[5], 45))
+    notes.push(["IRR 54.5", "The bid deadline is more than 45 calendar days after the last day of posting (Goods; Infrastructure allows 50, or 65 above PhP 50 million)."]);
+  if (lateBy(d[5], d[6], 7))
+    notes.push(["IRR 61.2.5", "The evaluation must be done within 7 calendar days from the bid deadline (14 for MEARB)."]);
+  if (lateBy(d[6], d[7], 12))
+    notes.push(["IRR 63.8", "Post-qualification takes 12 calendar days from the determination of the lowest bid."]);
+  if (lateBy(d[7], d[8], 10))
+    notes.push(["IRR 66.2", "The HoPE approves the award within 10 calendar days from the BAC resolution."]);
+  if (lateBy(d[5], d[8], 60))
+    notes.push(["IRR 67.1", "From the opening of bids to the award must not exceed 60 calendar days."]);
+  if (lateBy(d[8], d[9], 10))
+    notes.push(["IRR 66.5", "The contract is signed within 10 calendar days from receipt of the Notice of Award."]);
+  const info =
+    Number(abc) > 0 && Number(abc) < 3000000
+      ? '<p class="ra-info">IRR 51.1: the ABC is below PhP 3,000,000.00, so the pre-bid conference is at the BAC’s discretion.</p>'
+      : "";
+  return notes.length
+    ? `<div class="ra-notes"><strong>RA 12009 checks</strong><ul>${notes.map(([basis, text]) => `<li><b>${basis}:</b> ${text}</li>`).join("")}</ul>${info}</div>`
+    : `<div class="ra-notes ok">Every activity is within the RA 12009 IRR periods.${info}</div>`;
 }
 function setExportState(enabled) {
   [els.exportCsvBtn, els.exportJsonBtn, els.downloadPdfBtn, els.printBtn].forEach(
