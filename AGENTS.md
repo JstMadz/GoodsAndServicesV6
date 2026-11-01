@@ -31,6 +31,7 @@ A browser-only scheduler for the TUP BAC: from the Pre-Procurement Conference da
 - **Saved projects store activity indexes** (`startActivity`, `adjustments`) in `localStorage`. Add new rows as derived rows (no "Additional days" input) so existing indexes stay valid.
 - Print: each schedule must fit one sheet; taller ones are scaled with `zoom`, and the PDF adds each schedule as exactly one page. Don't reintroduce `break-after: page` or fixed bottom margins (they produced blank sheets).
 - Re-render the table after an input's blur, not during it (replacing the table inside blur throws `NotFoundError`).
+- **The CSP is in two places:** `_headers` (Netlify) and a `<meta>` tag in `index.html` (GitHub Pages). It allows this site and cdnjs only; a new library, font or API must be added to both, and inline scripts/handlers (`onclick=`, `onerror=`) are blocked: wire them with `addEventListener` in `script.js`.
 
 ## 7. Before you finish
 - [ ] Dates checked before/after in Chrome; print and PDF on A4 and Folio give one page per schedule

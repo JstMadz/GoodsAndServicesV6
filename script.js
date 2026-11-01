@@ -860,3 +860,9 @@ projects = safeLoad("tup_gs_projects").filter(
 ).map((p) => ({ ...p, adjustments: p.adjustments || {}, createdAt: p.createdAt || timestamp() }));
 renderHolidays();
 renderSchedules();
+
+// Hide the logo if it can't load. Done here rather than with an inline onerror, which the
+// Content-Security-Policy blocks; the image may already have failed before this script ran.
+const screenLogo = document.querySelector(".screen-logo");
+if (screenLogo.complete && !screenLogo.naturalWidth) screenLogo.hidden = true;
+else screenLogo.addEventListener("error", () => (screenLogo.hidden = true));

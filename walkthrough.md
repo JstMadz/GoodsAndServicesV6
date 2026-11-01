@@ -1,5 +1,12 @@
 # Walkthrough
 
+## 2026-11-01 — Security headers and a CSP
+
+- `_headers` (Netlify, goodsscheduler.netlify.app): CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, HSTS, Permissions-Policy. The CSP allows this site and html2pdf.js from cdnjs only.
+- The same CSP as a `<meta>` tag in `index.html` for the GitHub Pages copy (Pages can't send headers or `frame-ancestors`).
+- The logo's inline `onerror="this.hidden = true"` would be blocked; the same fallback now lives at the end of `script.js` (and catches an image that failed before the script ran). `script.js?v=` bumped.
+- Verified in Chrome with the headers and with the `<meta>` policy alone: two projects scheduled, a holiday marked, CSV, JSON, holiday file, PDF (1 MB, two schedules) and Print all work; 0 CSP violations, 0 page errors. With the logo returning 404 it is hidden.
+
 ## 2026-10-26 — RA 12009 checks under each schedule (branch `ra12009-fixes`)
 
 - Each schedule card now lists the RA 12009 IRR periods it breaks, on screen only (hidden in print and the PDF): pre-bid at least 7 CD after posting and 12 CD before the deadline (51.2), clarification 10 CD / bulletin 7 CD (51.5.1), at most 45 CD from the last day of posting to the deadline (54.5; Infrastructure 50/65 CD noted), evaluation within 7 CD (61.2.5), post-qualification within 12 CD (63.8), award within 10 CD of the resolution (66.2) and 60 CD of the opening (67.1), signing within 10 CD of the Notice of Award (66.5). Below PhP 3M it notes that the pre-bid conference is optional (51.1). A period ending on a non-working day runs to the next working day (67.3). Checked against the GPPB copy of the IRR.
