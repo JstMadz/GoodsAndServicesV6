@@ -1,0 +1,6 @@
+# GitHub Pages: the project's notes are for the team and AI agents, not site visitors
+exclude:
+  - AGENTS.md
+  - CLAUDE.md
+  - walkthrough.md
+  - implementation_plan.md
