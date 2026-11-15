@@ -17,7 +17,9 @@ const activities = [
   ["Approval of Resolution / Issuance of Notice of Award", 3, "working"],
   ["Contract Preparation and Signing", 5, "working"],
   ["Approval of Contract by Higher Authority", 3, "working"],
-  ["Issuance of Notice to Proceed", 2, "working"],
+  // RA 12009 Sec. 66: the NTP within 3 CD of approval. 2 working days broke it after a
+  // Thursday or Friday approval; 1 working day always fits (IRR 67.3 moves a weekend limit).
+  ["Issuance of Notice to Proceed", 1, "working"],
 ];
 const $ = (id) => document.getElementById(id);
 const els = Object.fromEntries(
@@ -304,6 +306,10 @@ function ra12009Notes(rows, abc) {
     notes.push(["IRR 67.1", "From the opening of bids to the award must not exceed 60 calendar days."]);
   if (lateBy(d[8], d[9], 10))
     notes.push(["IRR 66.5", "The contract is signed within 10 calendar days from receipt of the Notice of Award."]);
+  if (lateBy(d[9], d[10], 15))
+    notes.push(["RA 12009 Sec. 66", "When higher approval is needed, the approving authority acts within 15 calendar days from receipt of the contract."]);
+  if (lateBy(d[10], d[11], 3))
+    notes.push(["RA 12009 Sec. 66", "The Notice to Proceed is issued within 3 calendar days from the approval of the contract."]);
   const info =
     Number(abc) > 0 && Number(abc) < 3000000
       ? '<p class="ra-info">IRR 51.1: the ABC is below PhP 3,000,000.00, so the pre-bid conference is at the BAC’s discretion.</p>'

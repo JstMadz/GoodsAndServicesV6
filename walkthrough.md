@@ -1,5 +1,13 @@
 # Walkthrough
 
+## 2026-11-15 — RA 12009 Sec. 66: contract approval and Notice to Proceed (branch `ra12009-fixes`)
+
+- Same fix as the Bidding Document Generator (d277b59), by the three-apps rule. The IRR sets no period for these two activities, but **RA 12009 Sec. 66** does: the approving authority acts within 15 CD of receipt of the contract, and the NTP is issued within 3 CD of the approval (checked against the GPPB IRR of RA 12009, 1st Edition, March 30, 2026).
+- Root cause: the NTP was 2 working days after approval, which is 4 CD whenever approval falls on a Thursday or Friday, past the 3 CD limit. It is now 1 working day (maximum column 3), which always fits because IRR 67.3 moves a limit that ends on a day off to the next working day.
+- Two new on-screen checks (RA 12009 Sec. 66): approval within 15 CD of signing, NTP within 3 CD of approval. `script.js?v=` bumped.
+- Verified headless in Chromium: start Oct 22, 2026 gives approval Fri Dec 11 and NTP Mon Dec 14, the same as the Bidding Document Generator, with no findings; adding 2 days to the NTP shows the new Sec. 66 note. No page errors.
+- Note for the record: 45 CD (IRR 54.5) is a maximum from the last day of posting to the bid deadline, not a minimum; the 2026 IRR has no minimum total for the process.
+
 ## 2026-11-01 — Security headers and a CSP
 
 - `_headers` (Netlify, goodsscheduler.netlify.app): CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, HSTS, Permissions-Policy. The CSP allows this site and html2pdf.js from cdnjs only.
