@@ -47,6 +47,10 @@ const els = Object.fromEntries(
     "holidayCalendarDays",
   ].map((id) => [id, $(id)]),
 );
+// A schedule starts at the pre-procurement conference (0) or, when the conference is
+// already done, at the posting (1); its anchor date (preprocDate) is then the posting date.
+const POSTING = 1;
+const startOf = (project) => (project.startActivity === POSTING ? POSTING : 0);
 let holidays = [],
   projects = [],
   lastSchedules = [],
@@ -204,7 +208,7 @@ function renderSchedules() {
     .filter((project) => validDate(project.preprocDate))
     .map((project) => ({
       project,
-      rows: computeSchedule(project.preprocDate, project.adjustments || {}),
+      rows: computeSchedule(project.preprocDate, project.adjustments || {}, startOf(project)),
       createdAt: project.createdAt || timestamp(),
     }));
   els.schedulesContainer.innerHTML = projects.length
@@ -262,11 +266,11 @@ function renderScheduleCard({ project, rows, createdAt }) {
     <header class="schedule-brand"><img src="tup_logo.png" alt=""><div><p class="university-name">Technological University of the Philippines – Manila</p><p class="document-name">Goods &amp; Services Procurement Schedule · RA 12009 and its IRR</p></div></header>
     <div class="schedule-head">
       <div class="schedule-title-row"><h3>${escapeHtml(project.title)}</h3><div class="project-actions"><button type="button" class="button button-outline edit-project" data-id="${project.id}">Edit project</button><button type="button" class="button button-danger remove-project" data-id="${project.id}">Remove project</button></div></div>
-      <div class="metadata"><span><strong>ABC:</strong> ${money(project.abc)}</span><span><strong>Schedule time:</strong> ${time12(project.startTime)}–${time12(project.endTime)}</span><span><strong>Anchor date:</strong> ${readable(start)}</span></div>
+      <div class="metadata"><span><strong>ABC:</strong> ${money(project.abc)}</span><span><strong>Schedule time:</strong> ${time12(project.startTime)}–${time12(project.endTime)}</span><span><strong>Anchor date:</strong> ${readable(start)}</span>${startOf(project) ? `<span><strong>Starting activity:</strong> ${escapeHtml(rows[0].activity)}</span>` : ""}</div>
     </div>
     <div class="table-container table-wrap" role="region" tabindex="0" aria-label="Schedule details. Scroll horizontally to view all columns.">
       <table class="schedule-table"><thead><tr><th scope="col">Procurement activity</th><th scope="col">Minimum days</th><th scope="col">Maximum days</th><th scope="col">Additional days</th><th scope="col">Scheduled date</th><th scope="col">Elapsed calendar days</th></tr></thead>
-      <tbody>${rows.map((row) => `<tr><td>${escapeHtml(row.activity)}</td><td>${row.minDays}</td><td>${row.maxDays}</td><td><input class="adjust-input" type="number" min="0" max="3650" step="1" value="${row.extra}" data-id="${project.id}" data-index="${row.index}" aria-label="Additional days for ${escapeHtml(row.activity)}" ${row.index === 0 ? 'disabled title="The pre-procurement date is the schedule anchor."' : ""}><span class="row-error"></span></td><td>${row.date}</td><td>${between(start, row.dateValue)}</td></tr>`).join("")}</tbody>
+      <tbody>${rows.map((row) => `<tr><td>${escapeHtml(row.activity)}</td><td>${row.minDays}</td><td>${row.maxDays}</td><td><input class="adjust-input" type="number" min="0" max="3650" step="1" value="${row.extra}" data-id="${project.id}" data-index="${row.index}" aria-label="Additional days for ${escapeHtml(row.activity)}" ${row.index === rows[0].index ? 'disabled title="The anchor date starts the schedule."' : ""}><span class="row-error"></span></td><td>${row.date}</td><td>${between(start, row.dateValue)}</td></tr>`).join("")}</tbody>
       <tfoot><tr class="total-days-row"><th scope="row">TOTAL COUNTED DAYS</th><td>${totalMin.toLocaleString("en-PH")}</td><td>${totalMax.toLocaleString("en-PH")}</td><td>${totalAdditional.toLocaleString("en-PH")}</td><td></td><td>${between(start, last.dateValue).toLocaleString("en-PH")}</td></tr></tfoot></table>
     </div>
     ${ra12009Notes(rows, project.abc)}
@@ -283,7 +287,9 @@ function lateBy(from, to, days) {
   return to > nextWorking(shift(from, days));
 }
 function ra12009Notes(rows, abc) {
-  const d = rows.map((row) => row.dateValue);
+  // Dates by activity index, so the checks read the same rows when the conference is left out.
+  const d = [];
+  rows.forEach((row) => (d[row.index] = row.dateValue));
   const notes = [];
   if (between(d[1], d[2]) < 7)
     notes.push(["IRR 51.2", "The pre-bid conference must be at least 7 calendar days after posting."]);
@@ -352,8 +358,9 @@ function validProject() {
     setError("titleError", "A project with this title already exists.");
     ok = false;
   }
+  const startActivity = chosenStart();
   if (!validDate(preprocDate)) {
-    setError("preprocError", "Choose a valid pre-procurement conference date.");
+    setError("preprocError", startActivity ? "Choose a valid posting date." : "Choose a valid pre-procurement conference date.");
     ok = false;
   } else if (!isWorking(localDate(preprocDate))) {
     setError("preprocError", "Choose a working day that is not listed as a non-working date.");
@@ -384,11 +391,22 @@ function validProject() {
     setError("endError", "End time must be after the start time.");
     ok = false;
   }
-  return ok ? { title, abc, start, end, preprocDate } : null;
+  return ok ? { title, abc, start, end, preprocDate, startActivity } : null;
+}
+function chosenStart() {
+  return document.querySelector('input[name="startActivity"]:checked')?.value === String(POSTING) ? POSTING : 0;
+}
+function showStart(start) {
+  document.querySelector(`input[name="startActivity"][value="${start}"]`).checked = true;
+  $("preprocLabel").firstChild.textContent = start ? "Posting of the Invitation to Bid " : "Pre-procurement conference date ";
+  $("preprocHelp").textContent = start
+    ? "The anchor date; the conference row is left out."
+    : "The anchor date for the procurement schedule.";
 }
 function resetProjectForm() {
   editingProjectId = null;
   els.projectForm.reset();
+  showStart(0);
   els.addProjectBtn.textContent = "Generate project schedule";
   els.cancelEditBtn.hidden = true;
   clearFormErrors();
@@ -400,6 +418,7 @@ function beginProjectEdit(id) {
   els.projectTitle.value = project.title;
   els.abcInput.value = Number(project.abc).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   els.preprocDate.value = project.preprocDate || "";
+  showStart(startOf(project));
   els.startTime.value = project.startTime;
   els.endTime.value = project.endTime;
   els.addProjectBtn.textContent = "Save changes";
@@ -408,10 +427,11 @@ function beginProjectEdit(id) {
   els.projectTitle.focus();
   els.projectForm.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function computeSchedule(anchorISO, adjustments = {}) {
-  const extraDays = (index) => Math.max(0, Number(adjustments[index] || 0));
+function computeSchedule(anchorISO, adjustments = {}, start = 0) {
+  // The anchor row and any row before it take no additional days.
+  const extraDays = (index) => (index <= start ? 0 : Math.max(0, Number(adjustments[index] || 0)));
   const preproc = localDate(anchorISO),
-    advertisement = nextWorking(shift(preproc, 3 + extraDays(1))),
+    advertisement = start === POSTING ? preproc : nextWorking(shift(preproc, 3 + extraDays(1))),
     prebid = nextWorking(shift(advertisement, 7 + extraDays(2))),
     deadline = nextWorking(shift(prebid, 12 + extraDays(5)));
   let current = preproc;
@@ -435,7 +455,7 @@ function computeSchedule(anchorISO, adjustments = {}) {
       extra,
       index,
     };
-  });
+  }).slice(start);
 }
 function download(filename, type, contents) {
   const link = document.createElement("a");
@@ -452,7 +472,8 @@ function exportCsv() {
     [
       "Project Title",
       "ABC",
-      "Pre-procurement Conference Date",
+      "Anchor Date",
+      "Starting Activity",
       "Start Time",
       "End Time",
       "Activity",
@@ -468,6 +489,7 @@ function exportCsv() {
         project.title,
         project.abc,
         project.preprocDate,
+        scheduleRows[0].activity,
         project.startTime,
         project.endTime,
         r.activity,
@@ -481,6 +503,7 @@ function exportCsv() {
       project.title,
       project.abc,
       project.preprocDate,
+      scheduleRows[0].activity,
       project.startTime,
       project.endTime,
       "Total counted days",
@@ -508,7 +531,7 @@ function exportJson() {
       JSON.stringify(
         {
           generatedAt: new Date().toISOString(),
-          conferenceDates: projects.map(({ title, preprocDate }) => ({ title, preprocDate })),
+          conferenceDates: projects.map((p) => ({ title: p.title, preprocDate: p.preprocDate, startActivity: startOf(p) })),
           holidays,
           schedules: lastSchedules,
         },
@@ -788,6 +811,7 @@ els.projectForm.addEventListener("submit", (e) => {
     title: p.title,
     abc: p.abc,
     preprocDate: p.preprocDate,
+    startActivity: p.startActivity,
     startTime: p.start,
     endTime: p.end,
     adjustments: projects.find((project) => project.id === editingProjectId)?.adjustments || {},
@@ -833,6 +857,19 @@ els.abcInput.addEventListener("blur", () => {
     });
 });
 els.preprocDate.addEventListener("change", () => setError("preprocError", ""));
+// Switching keeps the posting date in place: to Posting, the field takes the posting date the
+// conference gave; back to Conference, the conference goes 3 CD before the posting (working day).
+document.querySelectorAll('input[name="startActivity"]').forEach((radio) =>
+  radio.addEventListener("change", () => {
+    const start = chosenStart();
+    showStart(start);
+    const value = els.preprocDate.value;
+    if (!validDate(value)) return;
+    const extra = Math.max(0, Number(projects.find((p) => p.id === editingProjectId)?.adjustments?.[1] || 0));
+    const date = localDate(value);
+    els.preprocDate.value = isoDate(start ? nextWorking(shift(date, 3 + extra)) : previousWorking(shift(date, -3)));
+  }),
+);
 $("resetBtn").addEventListener("click", () => {
   if (
     !window.confirm(
@@ -863,7 +900,7 @@ projects = safeLoad("tup_gs_projects").filter(
     Number.isFinite(Number(p.abc)) &&
     /^\d\d:\d\d$/.test(p.startTime) &&
     /^\d\d:\d\d$/.test(p.endTime),
-).map((p) => ({ ...p, adjustments: p.adjustments || {}, createdAt: p.createdAt || timestamp() }));
+).map((p) => ({ ...p, startActivity: startOf(p), adjustments: p.adjustments || {}, createdAt: p.createdAt || timestamp() }));
 renderHolidays();
 renderSchedules();
 

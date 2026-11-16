@@ -221,7 +221,7 @@ Enter the:
 
 ## Step 2
 
-Select the **Pre-Procurement Conference Date**.
+Select the **Pre-Procurement Conference Date**. If the conference is already done, choose **Schedule starts at: Posting** and enter the **Posting of the Invitation to Bid** date instead; the conference row is left out and every later activity keeps the same periods.
 
 ---
 

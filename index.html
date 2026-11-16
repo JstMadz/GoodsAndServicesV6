@@ -9,9 +9,9 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'" />
     <link rel="icon" type="image/png" href="tup_logo.png?v=20261021" />
     <link rel="apple-touch-icon" href="tup_logo.png?v=20261021" />
-    <link rel="stylesheet" href="style.css?v=20261026" />
+    <link rel="stylesheet" href="style.css?v=20261116" />
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-    <script defer src="script.js?v=20261115"></script>
+    <script defer src="script.js?v=20261116"></script>
   </head>
   <body class="scheduler-page">
     <a class="skip-link" href="#projectForm">Skip to schedule form</a>
@@ -49,8 +49,13 @@
           <fieldset class="form-panel">
             <legend><span class="step-marker">Step 2</span><span>Schedule setup</span></legend>
             <div class="form-grid schedule-grid">
+              <div class="field start-choice" role="radiogroup" aria-labelledby="startChoiceLabel">
+                <span id="startChoiceLabel" class="choice-label">Schedule starts at</span>
+                <label><input type="radio" name="startActivity" value="0" checked /> Conference <span class="field-hint">The usual start</span></label>
+                <label><input type="radio" name="startActivity" value="1" /> Posting <span class="field-hint">The conference is already done</span></label>
+              </div>
               <div class="field">
-                <label for="preprocDate">Pre-procurement conference date <span aria-hidden="true">*</span></label>
+                <label id="preprocLabel" for="preprocDate">Pre-procurement conference date <span aria-hidden="true">*</span></label>
                 <input id="preprocDate" type="date" required aria-describedby="preprocHelp preprocError" />
                 <p id="preprocHelp" class="field-hint">The anchor date for the procurement schedule.</p>
                 <p id="preprocError" class="field-error" aria-live="polite"></p>

@@ -3135,3 +3135,37 @@ fieldset.form-panel legend {
 .ra-notes .ra-info { margin: 0.35rem 0 0; color: #3d4650; }
 .pdf-export-source .ra-notes { display: none !important; }
 @media print { .ra-notes { display: none !important; } }
+
+/* Schedule starts at: Conference or Posting (one row above the date and times). */
+.start-choice {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+}
+.start-choice .choice-label {
+  font-weight: 650;
+  font-size: 0.92em;
+}
+.start-choice label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+.start-choice input[type="radio"] {
+  width: 1.1rem;
+  min-height: 0;
+  height: 1.1rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--brand);
+}
+.start-choice label .field-hint {
+  min-height: 0;
+  margin: 0;
+  color: var(--muted);
+}

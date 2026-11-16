@@ -1,5 +1,13 @@
 # Walkthrough
 
+## 2026-11-16 — A schedule can start at the posting (branch `ra12009-fixes`)
+
+- Step 2 has **Schedule starts at: Conference / Posting**. With Posting, the date field becomes "Posting of the Invitation to Bid", the conference row is left out, and the usual periods run from the posting: pre-bid at least 7 CD after (IRR 51.2), deadline 12 CD after the pre-bid (51.2), clarification 10 CD and bulletin 7 CD before the deadline (51.5.1), then working days. The RA 12009 checks read rows by activity, so they run the same.
+- Same option as the Bidding Document Generator (305e07f), so a posting-start schedule exported here imports there correctly: each project saves `startActivity: 1` and its `preprocDate` is then the posting date (the contract bidDocsGenerator already reads). Older saved projects load as Conference.
+- Switching keeps the posting date: to Posting, the field takes the posting date the conference gave; back to Conference, the conference goes 3 CD before the posting, on the previous working day. The anchor row has no additional days.
+- CSV: "Pre-procurement Conference Date" is now "Anchor Date", plus a "Starting Activity" column. The sheet header shows "Starting activity" when it is the posting. `script.js?v=` and `style.css?v=` bumped.
+- Verified headless in Chromium: for every working day of 2026 with extra days, starting at the posting gives the same rows and dates as starting at the conference minus its row (261 dates, 0 differences); a Dec 4, 2026 posting gives the same dates as the Bidding Document Generator; the JSON export imports there with start 1 and no conference date; the form fits at 390 px; PDF on A4 and Folio is one page per schedule. No page errors.
+
 ## 2026-11-15 — RA 12009 Sec. 66: contract approval and Notice to Proceed (branch `ra12009-fixes`)
 
 - Same fix as the Bidding Document Generator (d277b59), by the three-apps rule. The IRR sets no period for these two activities, but **RA 12009 Sec. 66** does: the approving authority acts within 15 CD of receipt of the contract, and the NTP is issued within 3 CD of the approval (checked against the GPPB IRR of RA 12009, 1st Edition, March 30, 2026).
