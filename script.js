@@ -499,7 +499,8 @@ function computeSchedule(anchorISO, adjustments = {}, start = 0, hold = true) {
 // passed (counted on dates not held to the maximums), and that maximum; null when none
 // limits it. Rows counted back from the deadline move earlier, so no maximum limits them.
 function extraLimit(project, index) {
-  if (activities[index][2] === "before-deadline") return null;
+  const through = MAX_PERIODS.some(([from, to]) => from < index && index <= to);
+  if (!through || activities[index][2] === "before-deadline") return null;
   const start = startOf(project);
   const passed = (extra) => {
     const rows = computeSchedule(project.preprocDate, { ...project.adjustments, [index]: extra }, start, false);
