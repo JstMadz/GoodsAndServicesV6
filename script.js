@@ -21,6 +21,28 @@ const activities = [
   // Thursday or Friday approval; 1 working day always fits (IRR 67.3 moves a weekend limit).
   ["Issuance of Notice to Proceed", 1, "working"],
 ];
+// RA 12009 maximum periods between activities, by index: [from, to, calendar days, basis,
+// days after "from" the period starts]. Calendar days include weekends and holidays; a last
+// day that is a day off moves to the next working day (IRR 67.3). The schedule is held to
+// them, and additional days stop at them. IRR 63.8: 12 CD, which the HoPE may extend to 45.
+const MAX_PERIODS = [
+  [1, 5, 45, "IRR 54.5", 6],
+  [5, 6, 7, "IRR 61.2.5"],
+  [6, 7, 45, "IRR 63.8"],
+  [7, 8, 10, "IRR 66.2"],
+  [5, 8, 60, "IRR 67.1"],
+  [8, 9, 10, "IRR 66.5"],
+  [9, 10, 15, "RA 12009 Sec. 66"],
+  [10, 11, 3, "RA 12009 Sec. 66"],
+];
+const POST_QUALIFICATION_DAYS = 12;
+const lastAllowed = (from, [, , days, , offset = 0]) => nextWorking(shift(from, offset + days));
+// The date held to the last day of every maximum ending at activity `index`.
+function held(index, date, d) {
+  return MAX_PERIODS.filter(([from, to]) => to === index && d[from])
+    .map((rule) => lastAllowed(d[rule[0]], rule))
+    .reduce((out, last) => (last < out ? last : out), date);
+}
 const $ = (id) => document.getElementById(id);
 const els = Object.fromEntries(
   [
@@ -241,9 +263,10 @@ function renderSchedules() {
     input.addEventListener("change", () => {
       const value = Number(input.value);
       const error = input.nextElementSibling;
-      if (!Number.isInteger(value) || value < 0 || value > 3650) {
+      const max = Number(input.dataset.max);
+      if (!Number.isInteger(value) || value < 0 || value > max) {
         input.setAttribute("aria-invalid", "true");
-        error.textContent = "Use a whole number from 0 to 3,650.";
+        error.textContent = value > max && input.dataset.limit ? `${input.dataset.limit}, so at most ${max} additional day${max === 1 ? "" : "s"}.` : `Use a whole number from 0 to ${max.toLocaleString("en-PH")}.`;
         return;
       }
       const project = projects.find((item) => item.id === input.dataset.id);
@@ -270,12 +293,21 @@ function renderScheduleCard({ project, rows, createdAt }) {
     </div>
     <div class="table-container table-wrap" role="region" tabindex="0" aria-label="Schedule details. Scroll horizontally to view all columns.">
       <table class="schedule-table"><thead><tr><th scope="col">Procurement activity</th><th scope="col">Minimum days</th><th scope="col">Maximum days</th><th scope="col">Additional days</th><th scope="col">Scheduled date</th><th scope="col">Elapsed calendar days</th></tr></thead>
-      <tbody>${rows.map((row) => `<tr><td>${escapeHtml(row.activity)}</td><td>${row.minDays}</td><td>${row.maxDays}</td><td><input class="adjust-input" type="number" min="0" max="3650" step="1" value="${row.extra}" data-id="${project.id}" data-index="${row.index}" aria-label="Additional days for ${escapeHtml(row.activity)}" ${row.index === rows[0].index ? 'disabled title="The anchor date starts the schedule."' : ""}><span class="row-error"></span></td><td>${row.date}</td><td>${between(start, row.dateValue)}</td></tr>`).join("")}</tbody>
+      <tbody>${rows.map((row) => adjustRow(project, row, rows[0].index, start)).join("")}</tbody>
       <tfoot><tr class="total-days-row"><th scope="row">TOTAL COUNTED DAYS</th><td>${totalMin.toLocaleString("en-PH")}</td><td>${totalMax.toLocaleString("en-PH")}</td><td>${totalAdditional.toLocaleString("en-PH")}</td><td></td><td>${between(start, last.dateValue).toLocaleString("en-PH")}</td></tr></tfoot></table>
     </div>
     ${ra12009Notes(rows, project.abc)}
     <footer class="schedule-footer"><div class="signatory"><p>Prepared by:</p><div class="signature-line"></div><strong>Signature over printed name</strong><span>Procurement Office</span></div><div class="document-timestamps"><p><strong>Created:</strong> ${createdAt}</p><p><strong>Printed:</strong> <time class="output-printed-at">Not printed yet</time></p></div></footer>
   </article>`;
+}
+// One schedule row. Additional days stop at the legal maximum, and the row says so.
+function adjustRow(project, row, firstIndex, start) {
+  const anchor = row.index === firstIndex;
+  const limit = anchor ? null : extraLimit(project, row.index);
+  const max = limit ? limit.max : 3650;
+  const note = limit ? `At the legal maximum: ${limit.rule[2]} CD (${limit.rule[3]})` : "";
+  const atMax = limit && row.extra >= max ? note : "";
+  return `<tr><td>${escapeHtml(row.activity)}</td><td>${row.minDays}</td><td>${row.maxDays}</td><td><input class="adjust-input" type="number" min="0" max="${max}" step="1" value="${row.extra}" data-id="${project.id}" data-index="${row.index}" data-max="${max}" data-limit="${escapeHtml(note)}" aria-label="Additional days for ${escapeHtml(row.activity)}" ${anchor ? 'disabled title="The anchor date starts the schedule."' : ""}><span class="row-error row-limit">${atMax}</span></td><td>${row.date}</td><td>${between(start, row.dateValue)}</td></tr>`;
 }
 function between(start, end) {
   return Math.round((end - start) / 86400000);
@@ -304,8 +336,8 @@ function ra12009Notes(rows, abc) {
     notes.push(["IRR 54.5", "The bid deadline is more than 45 calendar days after the last day of posting (Goods; Infrastructure allows 50, or 65 above PhP 50 million)."]);
   if (lateBy(d[5], d[6], 7))
     notes.push(["IRR 61.2.5", "The evaluation must be done within 7 calendar days from the bid deadline (14 for MEARB)."]);
-  if (lateBy(d[6], d[7], 12))
-    notes.push(["IRR 63.8", "Post-qualification takes 12 calendar days from the determination of the lowest bid."]);
+  if (lateBy(d[6], d[7], 45))
+    notes.push(["IRR 63.8", "Post-qualification may not exceed 45 calendar days in all from the determination of the lowest bid, even when the HoPE extends it."]);
   if (lateBy(d[7], d[8], 10))
     notes.push(["IRR 66.2", "The HoPE approves the award within 10 calendar days from the BAC resolution."]);
   if (lateBy(d[5], d[8], 60))
@@ -316,10 +348,12 @@ function ra12009Notes(rows, abc) {
     notes.push(["RA 12009 Sec. 66", "When higher approval is needed, the approving authority acts within 15 calendar days from receipt of the contract."]);
   if (lateBy(d[10], d[11], 3))
     notes.push(["RA 12009 Sec. 66", "The Notice to Proceed is issued within 3 calendar days from the approval of the contract."]);
+  const extended = !lateBy(d[6], d[7], 45) && between(d[6], d[7]) > POST_QUALIFICATION_DAYS;
   const info =
-    Number(abc) > 0 && Number(abc) < 3000000
+    (Number(abc) > 0 && Number(abc) < 3000000
       ? '<p class="ra-info">IRR 51.1: the ABC is below PhP 3,000,000.00, so the pre-bid conference is at the BAC’s discretion.</p>'
-      : "";
+      : "") +
+    (extended ? "<p class=\"ra-info\">IRR 63.8: past 12 CD of post-qualification, so it needs the HoPE's extension (up to 45 CD).</p>" : "");
   return notes.length
     ? `<div class="ra-notes"><strong>RA 12009 checks</strong><ul>${notes.map(([basis, text]) => `<li><b>${basis}:</b> ${text}</li>`).join("")}</ul>${info}</div>`
     : `<div class="ra-notes ok">Every activity is within the RA 12009 IRR periods.${info}</div>`;
@@ -427,13 +461,16 @@ function beginProjectEdit(id) {
   els.projectTitle.focus();
   els.projectForm.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function computeSchedule(anchorISO, adjustments = {}, start = 0) {
+function computeSchedule(anchorISO, adjustments = {}, start = 0, hold = true) {
   // The anchor row and any row before it take no additional days.
   const extraDays = (index) => (index <= start ? 0 : Math.max(0, Number(adjustments[index] || 0)));
+  const keep = (index, date, d) => (hold ? held(index, date, d) : date);
   const preproc = localDate(anchorISO),
     advertisement = start === POSTING ? preproc : nextWorking(shift(preproc, 3 + extraDays(1))),
     prebid = nextWorking(shift(advertisement, 7 + extraDays(2))),
-    deadline = nextWorking(shift(prebid, 12 + extraDays(5)));
+    d = [preproc, advertisement, prebid],
+    deadline = keep(5, nextWorking(shift(prebid, 12 + extraDays(5))), d);
+  d[5] = deadline;
   let current = preproc;
   return activities.map(([activity, days, type], index) => {
     let date;
@@ -444,7 +481,8 @@ function computeSchedule(anchorISO, adjustments = {}, start = 0) {
     else if (type === "after-prebid") date = deadline;
     else if (type === "before-deadline")
       date = previousWorking(shift(deadline, -(days + extra)));
-    else date = addWorking(current, days + extra);
+    else date = keep(index, addWorking(current, days + extra), d);
+    d[index] = date;
     current = date;
     return {
       activity,
@@ -456,6 +494,24 @@ function computeSchedule(anchorISO, adjustments = {}, start = 0) {
       index,
     };
   }).slice(start);
+}
+// The most additional days an activity can take before a maximum running through it is
+// passed (counted on dates not held to the maximums), and that maximum; null when none
+// limits it. Rows counted back from the deadline move earlier, so no maximum limits them.
+function extraLimit(project, index) {
+  if (activities[index][2] === "before-deadline") return null;
+  const start = startOf(project);
+  const passed = (extra) => {
+    const rows = computeSchedule(project.preprocDate, { ...project.adjustments, [index]: extra }, start, false);
+    const d = [];
+    rows.forEach((row) => (d[row.index] = row.dateValue));
+    return MAX_PERIODS.find((rule) => rule[0] < index && index <= rule[1] && d[rule[0]] && d[rule[1]] > lastAllowed(d[rule[0]], rule));
+  };
+  for (let extra = 0; extra <= 3650; extra++) {
+    const rule = passed(extra + 1);
+    if (rule) return { max: extra, rule };
+  }
+  return null;
 }
 function download(filename, type, contents) {
   const link = document.createElement("a");

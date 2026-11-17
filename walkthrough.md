@@ -1,5 +1,22 @@
 # Walkthrough
 
+## 2026-11-17 — The schedule stops at each RA 12009 maximum (branch `ra12009-fixes`)
+
+- **Owner's direction:** the scheduler is dynamic up to each legal maximum and strict at it. Periods count calendar days, weekends and holidays included. When a maximum is reached, the additional days stop, with a short note citing the section. IRR 63.8: post-qualification takes 12 CD, and the HoPE may extend it to 45 CD in all; IRR 66.5: 10 CD.
+- **Root cause:** additional days went up to 3,650 and a broken period only showed in the RA 12009 checks. The working-day defaults could cross a holiday cluster (e.g. a 2026-09-21 conference broke IRR 66.5). IRR 63.8 was checked at 12 CD.
+- **Fix:**
+  - `MAX_PERIODS`: one table of the maximums by activity index, with `lastAllowed` (IRR 67.3 moves a last day off to the next working day).
+  - `computeSchedule` holds every computed date to it.
+  - `extraLimit` finds the most additional days an activity can take. The box's `max` is set to it, a larger typed number is refused with "At the legal maximum: 10 CD (IRR 66.5), so at most 0 additional days.", and the row shows the note when it is at the limit.
+  - IRR 63.8 now warns past 45 CD, and an information line says past 12 CD needs the HoPE's extension.
+- Same rules and dates as the Bidding Document Generator (1d1b4a3).
+- **Verified headless in Chromium:**
+  - 1,464 schedules (every 2026 start date × 4 sets of additional days, with the TUP non-working dates) give the same dates as the Bidding Document Generator, with 0 differences;
+  - the 2026-09-21 schedule is within every period;
+  - Contract Signing shows the limit note, and 9 typed days are refused;
+  - 8 more days of post-qualification show the 63.8 note.
+  - No page errors. `script.js?v=` bumped.
+
 ## 2026-11-16 — A schedule can start at the posting (branch `ra12009-fixes`)
 
 - Step 2 has **Schedule starts at: Conference / Posting**. With Posting, the date field becomes "Posting of the Invitation to Bid", the conference row is left out, and the usual periods run from the posting: pre-bid at least 7 CD after (IRR 51.2), deadline 12 CD after the pre-bid (51.2), clarification 10 CD and bulletin 7 CD before the deadline (51.5.1), then working days. The RA 12009 checks read rows by activity, so they run the same.

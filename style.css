@@ -1934,6 +1934,13 @@ fieldset.form-panel legend {
   color: var(--error);
   font-size: 0.68rem;
 }
+/* "At the legal maximum: 10 CD (IRR 66.5)": information, not an error. */
+.row-limit:not(:empty) {
+  color: var(--muted);
+}
+.adjust-input[aria-invalid="true"] + .row-limit {
+  color: var(--error);
+}
 .schedule-footer {
   display: flex;
   justify-content: space-between;
